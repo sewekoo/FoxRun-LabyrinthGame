@@ -1,0 +1,5 @@
+package labyrinthGame
+
+class Player {
+
+}

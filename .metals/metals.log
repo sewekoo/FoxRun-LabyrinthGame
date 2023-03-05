@@ -1,0 +1,64 @@
+2023.03.03 18:10:15 INFO  Started: Metals version 0.11.11 in workspace 'D:\Aalto\OS2-Labyrinth-Severi-Koivumaa' for client Visual Studio Code 1.75.1.
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions 1.7.x or earlier.
+SLF4J: Ignoring binding found at [jar:file:/C:/Users/stere/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/com/outr/scribe-slf4j_2.13/3.11.0/scribe-slf4j_2.13-3.11.0.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See https://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+2023.03.03 18:10:16 INFO  time: initialize in 0.59s
+2023.03.03 18:10:18 WARN  Build server is not auto-connectable.
+2023.03.03 18:10:31 INFO  running 'C:\Users\stere\.jabba\jdk\adopt@1.11.0-11\bin\java -Djline.terminal=jline.UnsupportedTerminal -Dsbt.log.noformat=true -Dfile.encoding=UTF-8 -jar C:\Users\stere\AppData\Local\Temp\metals16928489431512322209\sbt-launch.jar -Dbloop.export-jar-classifiers=sources bloopInstall'
+2023.03.03 18:10:39 INFO  [info] welcome to sbt 1.8.2 (AdoptOpenJDK Java 11.0.11)
+2023.03.03 18:10:41 INFO  [info] loading global plugins from C:\Users\stere\.sbt\1.0\plugins
+2023.03.03 18:10:46 INFO  [info] loading settings for project os2-labyrinth-severi-koivumaa-build-build from metals.sbt ...
+2023.03.03 18:10:46 INFO  [info] loading project definition from D:\Aalto\OS2-Labyrinth-Severi-Koivumaa\project\project
+2023.03.03 18:10:47 INFO  [info] loading settings for project os2-labyrinth-severi-koivumaa-build from metals.sbt ...
+2023.03.03 18:10:47 INFO  [info] loading project definition from D:\Aalto\OS2-Labyrinth-Severi-Koivumaa\project
+2023.03.03 18:10:50 INFO  [success] Generated .bloop\os2-labyrinth-severi-koivumaa-build.json
+2023.03.03 18:10:50 INFO  [success] Total time: 3 s, completed 3 Mar 2023, 18.10.50
+2023.03.03 18:10:52 INFO  [info] loading settings for project root from build.sbt ...
+2023.03.03 18:10:52 INFO  [info] set current project to OS2-Labyrinth-Severi-Koivumaa (in build file:/D:/Aalto/OS2-Labyrinth-Severi-Koivumaa/)
+2023.03.03 18:10:52 INFO  [success] Generated .bloop\root.json
+2023.03.03 18:10:52 INFO  [success] Generated .bloop\root-test.json
+2023.03.03 18:10:53 INFO  [success] Total time: 1 s, completed 3 Mar 2023, 18.10.53
+2023.03.03 18:10:53 INFO  time: ran 'sbt bloopInstall' in 21s
+2023.03.03 18:10:53 INFO  Attempting to connect to the build server...
+2023.03.03 18:10:53 INFO  Bloop uses C:\Users\stere\.jabba\jdk\adopt@1.11.0-11 defined at C:\Users\stere\.bloop\bloop.json
+2023.03.03 18:10:53 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at D:\Aalto\OS2-Labyrinth-Severi-Koivumaa\.metals\bsp.trace.json or C:\Users\stere\AppData\Local\scalameta\metals\cache\bsp.trace.json
+2023.03.03 18:10:53 INFO  Attempting to connect to the build server...
+2023.03.03 18:10:53 INFO  Bloop uses C:\Users\stere\.jabba\jdk\adopt@1.11.0-11 defined at C:\Users\stere\.bloop\bloop.json
+2023.03.03 18:10:53 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at D:\Aalto\OS2-Labyrinth-Severi-Koivumaa\project\.metals\bsp.trace.json or C:\Users\stere\AppData\Local\scalameta\metals\cache\bsp.trace.json
+2023.03.03 18:10:54 INFO  time: Connected to build server in 1.02s
+2023.03.03 18:10:54 INFO  Connected to Build server: Bloop v1.5.6
+2023.03.03 18:11:01 INFO  time: indexed workspace in 6.64s
+2023.03.03 18:12:20 INFO  compiling root (1 scala source)
+2023.03.03 18:12:24 INFO  time: compiled root in 4.46s
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-core_2.13/3.6.1/scalafmt-core_2.13-3.6.1.pom
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-core_2.13/3.6.1/scalafmt-core_2.13-3.6.1.pom
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-sysops_2.13/3.6.1/scalafmt-sysops_2.13-3.6.1.pom
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-config_2.13/3.6.1/scalafmt-config_2.13-3.6.1.pom
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-sysops_2.13/3.6.1/scalafmt-sysops_2.13-3.6.1.pom
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-config_2.13/3.6.1/scalafmt-config_2.13-3.6.1.pom
+Downloading https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.11.1/metaconfig-typesafe-config_2.13-0.11.1.pom
+Downloaded https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.11.1/metaconfig-typesafe-config_2.13-0.11.1.pom
+Downloading https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.9/scala-compiler-2.13.9.pom
+Downloaded https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.9/scala-compiler-2.13.9.pom
+Downloading https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.11.1/metaconfig-typesafe-config_2.13-0.11.1.jar
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-sysops_2.13/3.6.1/scalafmt-sysops_2.13-3.6.1.jar
+Downloading https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.9/scala-compiler-2.13.9.jar
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-core_2.13/3.6.1/scalafmt-core_2.13-3.6.1.jar
+Downloading https://repo1.maven.org/maven2/org/scalameta/scalafmt-config_2.13/3.6.1/scalafmt-config_2.13-3.6.1.jar
+Downloaded https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.11.1/metaconfig-typesafe-config_2.13-0.11.1.jar
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-sysops_2.13/3.6.1/scalafmt-sysops_2.13-3.6.1.jar
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-config_2.13/3.6.1/scalafmt-config_2.13-3.6.1.jar
+Downloaded https://repo1.maven.org/maven2/org/scalameta/scalafmt-core_2.13/3.6.1/scalafmt-core_2.13-3.6.1.jar
+Downloaded https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.9/scala-compiler-2.13.9.jar
+2023.03.03 18:15:05 INFO  compiling root (1 scala source)
+2023.03.03 18:15:07 INFO  time: compiled root in 1.35s
+Mar 03, 2023 6:15:10 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 105
+2023.03.03 18:15:51 INFO  Shutting down server
+2023.03.03 18:15:51 INFO  shutting down Metals
+2023.03.03 18:15:51 INFO  Shut down connection with build server.
+2023.03.03 18:15:51 INFO  Shut down connection with build server.
+2023.03.03 18:15:51 INFO  Exiting server

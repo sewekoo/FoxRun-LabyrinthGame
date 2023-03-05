@@ -6,3 +6,4 @@ lazy val root = (project in file("."))
   .settings(
     name := "OS2-Labyrinth-Severi-Koivumaa"
   )
+libraryDependencies += "org.scalafx" % "scalafx_3" % "19.0.0-R30"
