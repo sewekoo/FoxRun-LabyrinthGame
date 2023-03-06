@@ -1,0 +1,10 @@
+Report 06.03.2023
+- Implemented weave labyrinth generation successfully with placeholder graphics.
+	- Red blocks represent walls (small gaps should be ignored. Those are due to draw order of walls and some of them being black when they are "broken" instead of invisible)
+	- Black represent roads
+	- Green blocks represent bridges or overpasses over a square
+- There were some problems that made me change a plan a bit. For example Vectors did not obviously work because I needed mutable collections so I changed to Buffers.
+- Then I couldn't implement a "Window" -class yet like I wanted, because how the JavaFX works. I will look into this further on and for now implement graphical elements in Main object.
+- I think I'm pretty much on schedule. I will now begin work with game loop and adding ability to move a character in the labyrinth.
+- Even though graphically my project is quite ugly, I should be able to implement game loop and work on graphics later on.
+- Estimated work hours for last two weeks are around 10 hours.
