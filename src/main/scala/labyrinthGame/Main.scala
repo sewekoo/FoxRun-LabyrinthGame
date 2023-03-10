@@ -8,6 +8,10 @@ import scalafx.scene.control.Button
 import scalafx.scene.layout.Pane
 import scalafx.scene.paint.Color.{Blue, Green, Red, rgb}
 import scalafx.scene.shape.Rectangle
+import scalafx.scene.input.{KeyCode, KeyEvent}
+import scalafx.scene.image.ImageView
+import scalafx.Includes.*
+import scalafx.animation.AnimationTimer
 
 object Main extends JFXApp3 {
 
@@ -24,9 +28,20 @@ object Main extends JFXApp3 {
       width = 1900
       height = 1080
 
+    val second = 1_000_000_000L
+    var lastTick = 0L
+    val timer: AnimationTimer = AnimationTimer(now => {
+      if lastTick == 0L || (now - lastTick > second / 5) then {
+        lastTick = now
+      }
+    })
+
     val root = Pane() // Simple pane component
     val scene = Scene(parent = root) // Scene acts as a container for the scene graph
     stage.scene = scene // Assigning the new scene as the current scene for the stage
+
+    var player = new Rectangle :
+        fill = Blue
 
     val button = Button("Generate labyrinth")
     button.setLayoutX(1500)
@@ -36,6 +51,28 @@ object Main extends JFXApp3 {
       initializeGame()
       drawGrid()
     root.children += button //Needs scalafx.Includes._ import
+
+    scene.onKeyPressed = (key: KeyEvent) =>
+      println("Recognized key input")
+      key.code match
+        case KeyCode.W =>
+          println("Up key pressed")
+          if (gameOn) then
+            game.player.moveUp()
+            redrawPlayer()
+        case KeyCode.S =>
+          if (gameOn) then
+            game.player.moveDown()
+            redrawPlayer()
+        case KeyCode.D =>
+          if (gameOn) then
+            game.player.moveRight()
+            redrawPlayer()
+        case KeyCode.A =>
+          if (gameOn) then
+            game.player.moveLeft()
+            redrawPlayer()
+        case _ => println("Unknown input")
 
     def drawGrid() =
       val backgroundColor = new Rectangle :
@@ -96,11 +133,19 @@ object Main extends JFXApp3 {
               height = j.getSize() + j.getSize() / 2
               fill = Green
             root.children += overpass
+      player.x = game.player.getPosX
+      player.y = game.player.getPosY
+      player.width = game.squareSize / 4
+      player.height = game.squareSize / 4
+      player.fill = Blue
+      root.children += player
 
 
 
 
-
+    def redrawPlayer() =
+      player.x = game.player.getPosX
+      player.y = game.player.getPosY
 
     def drawSquare() =
         val rectangle = new Rectangle :
@@ -112,7 +157,6 @@ object Main extends JFXApp3 {
 
         root.children += rectangle
 
-
-
-
+    def tick(): Unit =
+      ???
 }

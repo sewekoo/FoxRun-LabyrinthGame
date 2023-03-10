@@ -19,11 +19,14 @@ class Game {
     level.initalizeGrid()
     level.pickStartingPosition()
     level.generateLabyrinth()
+    initializeLevel()
     level.grid
 
-  def placePlayer(): Unit = ???
+  def placePlayer(level: Level): Unit =
+    player = new Player(level)
 
-  def initializeLevel(): Unit = ???
+  def initializeLevel(): Unit =
+    placePlayer(level)
 
   def update(): Unit = ???
 }
