@@ -6,7 +6,7 @@ import scalafx.application.JFXApp3
 import scalafx.scene.Scene
 import scalafx.scene.control.Button
 import scalafx.scene.layout.Pane
-import scalafx.scene.paint.Color.{Blue, Green, Red}
+import scalafx.scene.paint.Color.{Blue, Green, Red, rgb}
 import scalafx.scene.shape.Rectangle
 
 object Main extends JFXApp3 {
@@ -38,6 +38,13 @@ object Main extends JFXApp3 {
     root.children += button //Needs scalafx.Includes._ import
 
     def drawGrid() =
+      val backgroundColor = new Rectangle :
+        x = 0
+        y = 0
+        width = 1500
+        height = 1000
+      root.children += backgroundColor
+
       for (i <- game.level.wallGridHorizontal) do
         for (j <- i) do
           val wall = new Rectangle :
@@ -47,6 +54,8 @@ object Main extends JFXApp3 {
             height = j.getWidth()
             if (!j.isBroken) then
               fill = Red
+            else
+              fill = rgb(0, 0, 0, 0)
           root.children += wall
 
       for (i <- game.level.wallGridVertical) do
@@ -58,6 +67,8 @@ object Main extends JFXApp3 {
             height = j.getLength()
             if (!j.isBroken) then
               fill = Red
+            else
+              fill = rgb(0, 0, 0, 0)
           root.children += wall
 
       for (i <- game.level.grid) do
