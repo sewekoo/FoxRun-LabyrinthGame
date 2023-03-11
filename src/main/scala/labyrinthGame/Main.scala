@@ -135,8 +135,8 @@ object Main extends JFXApp3 {
             root.children += overpass
       player.x = game.player.getPosX
       player.y = game.player.getPosY
-      player.width = game.squareSize / 4
-      player.height = game.squareSize / 4
+      player.width = game.player.size
+      player.height = game.player.size
       player.fill = Blue
       root.children += player
 

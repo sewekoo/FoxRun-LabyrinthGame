@@ -181,6 +181,8 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
 
 
 
+  def getSquareSize: Int = squareSize
+  
   def winLevel(): Unit = ???
 
   def loseLevel(): Unit = ???
