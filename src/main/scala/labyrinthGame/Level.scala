@@ -13,6 +13,10 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
   var unconnected: Buffer[Square] = Buffer[Square]()
   var weavable: Buffer[Square] = Buffer[Square]()
   val rand = new Random()
+  val edges: Buffer[Wall] = Buffer[Wall]()
+      val goals = Buffer[Wall]()
+  var levelWon = false
+  var levelLost = false
 
   def initalizeGrid(): Unit =
     for(y <- 0 until mapSizeY) do
@@ -176,9 +180,22 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
         if connected.nonEmpty then
           currentSquare = connected.head
 
+  def pickEdges(): Unit =
+    for (y <- wallGridVertical) do
+      for (x <- y) do
+        if (x.isEdge)
+          edges += x
+    for (y <- wallGridHorizontal) do
+      for (x <- y) do
+        if (x.isEdge)
+          edges += x
 
-
-
+  def pickGoals(amount: Int): Unit =
+    for i <- 0 until amount do
+      goals += edges(rand.nextInt(edges.length))
+    for i <- goals do
+      i.isGoal = true
+      i.isBroken = true
 
 
   def getSquareSize: Int = squareSize

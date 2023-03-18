@@ -3,9 +3,13 @@ package labyrinthGame
 import javafx.geometry.Pos
 import labyrinthGame.Main.stage
 import scalafx.application.JFXApp3
+import scalafx.application.JFXApp3.PrimaryStage
+import scalafx.beans.property.{BooleanProperty, IntegerProperty, ObjectProperty}
 import scalafx.scene.Scene
+import scalafx.scene.canvas.{Canvas, GraphicsContext}
+import scalafx.scene.control.{Menu, MenuBar, MenuItem}
 import scalafx.scene.control.Button
-import scalafx.scene.layout.Pane
+import scalafx.scene.layout.{BorderPane, HBox}
 import scalafx.scene.paint.Color.{Blue, Green, Red, rgb}
 import scalafx.scene.shape.Rectangle
 import scalafx.scene.input.{KeyCode, KeyEvent}
@@ -22,65 +26,110 @@ object Main extends JFXApp3 {
     game = new Game
     game.generateLevel(0)
 
-  def start(): Unit =
-    stage = new JFXApp3.PrimaryStage :
-      title = "Labyrinth Game"
-      width = 1900
-      height = 1080
+  def tick(graphics: GraphicsContext): Unit =
+      if (game.levelLoaded) then
+        game.update()
+        graphics.fill = rgb(0, 0, 0, 1.0)
+        graphics.fillRect(0, 0, game.mapSizeX * (game.squareSize * 1.5), game.mapSizeY * (game.squareSize * 1.5))
+        for (i <- game.level.wallGridHorizontal) do
+          for (j <- i) do
+            if (!j.isBroken) then
+              graphics.fill = Red
+              graphics.fillRect(j.getPosX(), j.getPosY(), j.getLength(), j.getWidth())
+        for (i <- game.level.wallGridVertical) do
+          for (j <- i) do
+            if (!j.isBroken) then
+              graphics.fill = Red
+              graphics.fillRect(j.getPosX(), j.getPosY(), j.getWidth(), j.getLength())
+
+        for (i <- game.level.grid) do
+          for (j <- i) do
+            graphics.fill = rgb(0, 0, 0, 1.0)
+            graphics.fillRect(j.getPosX(), j.getPosY(), j.getSize(), j.getSize())
+            if (j.hasHorizontalOverpass) then
+              graphics.fill = Green
+              graphics.fillRect(j.getPosX() - j.getSize() / 4, j.getPosY() + j.getSize() / 4, j.getSize() + j.getSize() / 2, j.getSize() / 2)
+            if (j.hasVecticalOverpass) then
+              graphics.fill = Green
+              graphics.fillRect(x = j.getPosX() + j.getSize() / 4, y = j.getPosY() - j.getSize() / 4, j.getSize() / 2, j.getSize() + j.getSize() / 2)
+
+        graphics.fill = Blue
+        graphics.fillRect(game.player.getPosX, game.player.getPosY, game.player.size, game.player.size)
+
+        if (game.level.levelWon) then
+          game.generateLevel(game.round)
+
+
+
+
+  override def start(): Unit =
+    var graphics: GraphicsContext = null
 
     val second = 1_000_000_000L
     var lastTick = 0L
     val timer: AnimationTimer = AnimationTimer(now => {
-      if lastTick == 0L || (now - lastTick > second / 5) then {
+      if lastTick == 0L || (now - lastTick > second / 64) then {
         lastTick = now
+        tick(graphics)
       }
     })
 
-    val root = Pane() // Simple pane component
-    val scene = Scene(parent = root) // Scene acts as a container for the scene graph
-    stage.scene = scene // Assigning the new scene as the current scene for the stage
+    stage = new PrimaryStage {
+      title = "Labyrinth Game"
+      width = 1900
+      height = 1080
+      scene = new Scene {
+        val rootPane = new BorderPane
+        rootPane.top = new MenuBar {
+          menus = List {
+            new Menu("Game") {
+              items = List {
+                new MenuItem("Start game") {
+                  onAction = { _ =>
+                    gameOn = true
+                    initializeGame()
+                    timer.start()
+                  }
+                }
+              }
+            }
+          }
+        }
+        rootPane.center = new HBox(1) {
+          children = new Canvas {
+            width <== rootPane.width
+            height <== rootPane.height
+            graphics = this.graphicsContext2D
+          }
+        }
+        root = rootPane
+        onKeyPressed = (key: KeyEvent) =>
+          println("Recognized key input")
+          key.code match
+            case KeyCode.W =>
+              println("Up key pressed")
+              if (gameOn) then
+                game.player.moveUp()
+            case KeyCode.S =>
+              if (gameOn) then
+                game.player.moveDown()
+            case KeyCode.D =>
+              if (gameOn) then
+                game.player.moveRight()
+            case KeyCode.A =>
+              if (gameOn) then
+                game.player.moveLeft()
+            case _ => println("Unknown input")
+      }
+    }
 
-    var player = new Rectangle :
-        fill = Blue
+    //val root = Pane() // Simple pane component
+    //val scene = Scene(parent = root) // Scene acts as a container for the scene graph
+    //stage.scene = scene // Assigning the new scene as the current scene for the stage
 
-    val button = Button("Generate labyrinth")
-    button.setLayoutX(1500)
-    button.setLayoutY(1000)
-    button.onAction = (event) =>
-      gameOn = true
-      initializeGame()
-      drawGrid()
-    root.children += button //Needs scalafx.Includes._ import
-
-    scene.onKeyPressed = (key: KeyEvent) =>
-      println("Recognized key input")
-      key.code match
-        case KeyCode.W =>
-          println("Up key pressed")
-          if (gameOn) then
-            game.player.moveUp()
-            redrawPlayer()
-        case KeyCode.S =>
-          if (gameOn) then
-            game.player.moveDown()
-            redrawPlayer()
-        case KeyCode.D =>
-          if (gameOn) then
-            game.player.moveRight()
-            redrawPlayer()
-        case KeyCode.A =>
-          if (gameOn) then
-            game.player.moveLeft()
-            redrawPlayer()
-        case _ => println("Unknown input")
-
+/**
     def drawGrid() =
-      val backgroundColor = new Rectangle :
-        x = 0
-        y = 0
-        width = 1500
-        height = 1000
-      root.children += backgroundColor
+
 
       for (i <- game.level.wallGridHorizontal) do
         for (j <- i) do
@@ -139,24 +188,8 @@ object Main extends JFXApp3 {
       player.height = game.player.size
       player.fill = Blue
       root.children += player
+*/
 
 
 
-
-    def redrawPlayer() =
-      player.x = game.player.getPosX
-      player.y = game.player.getPosY
-
-    def drawSquare() =
-        val rectangle = new Rectangle :
-          x = 100
-          y = 100
-          width = 50
-          height = 50
-          fill = Blue //scalafx.scene.paint.Color
-
-        root.children += rectangle
-
-    def tick(): Unit =
-      ???
 }
