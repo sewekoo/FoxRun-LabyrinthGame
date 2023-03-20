@@ -8,3 +8,28 @@ Report 06.03.2023
 - I think I'm pretty much on schedule. I will now begin work with game loop and adding ability to move a character in the labyrinth.
 - Even though graphically my project is quite ugly, I should be able to implement game loop and work on graphics later on.
 - Estimated work hours for last two weeks are around 10 hours.
+
+Report 20.03.2023
+- Fixed graphical bug that caused small unintended gaps in walls caused by broken walls not being invisible.
+- Added a movable playble character. Player can be moved with WASD-keys.
+- Implemented collision with player and walls.
+  - When using overpasses, players movement is "locked" until player reaches other side of overpass or returns.
+  - There still exists a bug where player can escape "out-of-bounds" when on top of an invisible broken wall.
+  - When going under overpasses, the overpass is redrawn on top of player model.
+- Added win and lose conditions
+  - Random "goals" are generated at edges. When player reaches these goals a new level is generated. Goals are the "gaps" at the edges of the levels.
+  - Changed drawing to a tick system to allow updating draw orders and allow multiple levels.
+  - When level is beat a new level is generated
+  - Player is also awarded points determined by round number and remaining time.
+  - When player loses (time runs out) the game is stopped.
+- Added solver algorithm. Run the algrotihm by pressing "Y"-key when level is active.
+  - Follow the yellow dots to find the exit with minimum number of movements.
+- "First larger whole" that have been implemented is the overall working game-loop with core logic and functions.
+  - With levels generating correctly, solver working and levels being playable almost all core mechanics are complete.
+  - Last core mechanic to be implemented is file I/O.
+  - After that most of the work will be adding options and improving gameplay, such as adding ability to change map size, implementing view that follows player and menu other menu functions.
+  - The rest of the time will be used to find and fix bugs and make game pretty.
+- Biggest error fixed was the complete change in drawing style. I now use ScalaFX GraphicsContext class which seems better for constantly updating drawing that my game requires.
+- As stated before largest bug to fix at the moment is to prevent player going out-of-bounds when on top of invisible walls.
+- I think I'm currently in schedule. My game is somewhat "playable" which was my goal.
+- Estimated working hours for past two weeks are around 15 hours.
