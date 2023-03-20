@@ -17,6 +17,8 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
       val goals = Buffer[Wall]()
   var levelWon = false
   var levelLost = false
+  var showSolution = false
+  var solution: Buffer[Square] = Buffer[Square]()
 
   def initalizeGrid(): Unit =
     for(y <- 0 until mapSizeY) do
@@ -199,12 +201,114 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
 
 
   def getSquareSize: Int = squareSize
-  
-  def winLevel(): Unit = ???
 
-  def loseLevel(): Unit = ???
+  def solve(): Buffer[Square] =
+    var movements: Buffer[Square] = Buffer[Square](startingPoint)
+    var intersections: Buffer[Tuple2[Buffer[Square], Buffer[Square]]] = Buffer[Tuple2[Buffer[Square], Buffer[Square]]]()
+    val solutions: Buffer[Buffer[Square]] = Buffer[Buffer[Square]]()
 
-  def pause(): Unit = ???
+    var everythingTried = false
 
-  def solve(): List[Square] = ???
+    while (!everythingTried) do
+      val currentSquare = movements.head
+      println(s"Trying to solve. Current square: x${currentSquare.getGridPosX()}, y${currentSquare.getGridPosY()}. Solutions atm: ${solution.length}. Movements length: ${movements.length}")
+      var connectedNeighbours: Buffer[Square] = Buffer[Square]()
+
+      // Check if can move directly to north or if theres goal
+      val northNeighbourWall = wallGridHorizontal(currentSquare.getGridPosY())(currentSquare.getGridPosX())
+      if (northNeighbourWall.isBroken && !northNeighbourWall.isEdge) then
+        if (!movements.contains(grid(currentSquare.getGridPosY() - 1)(currentSquare.getGridPosX()))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY() - 1)(currentSquare.getGridPosX())
+      else if (northNeighbourWall.isGoal) then
+        println("Found a solution")
+        solutions.prepend(movements.clone())
+
+      // Check if can move directly to east or if theres goal
+      val eastNeighbourWall = wallGridVertical(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 1)
+      if (eastNeighbourWall.isBroken && !eastNeighbourWall.isEdge) then
+        if (!movements.contains(grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 1))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 1)
+      else if (eastNeighbourWall.isGoal) then
+        println("Found a solution")
+        solutions.prepend(movements.clone())
+
+      // Check if can move directly to south or if theres goal
+      val southNeighbourWall = wallGridHorizontal(currentSquare.getGridPosY() + 1)(currentSquare.getGridPosX())
+      if (southNeighbourWall.isBroken && !southNeighbourWall.isEdge) then
+        if (!movements.contains(grid(currentSquare.getGridPosY() + 1)(currentSquare.getGridPosX()))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY() + 1)(currentSquare.getGridPosX())
+      else if (southNeighbourWall.isGoal) then
+          println("Found a solution")
+          solutions.prepend(movements.clone())
+
+      // Check if can move directly to west or if theres goal
+      val westNeighbourWall = wallGridVertical(currentSquare.getGridPosY())(currentSquare.getGridPosX())
+      if (westNeighbourWall.isBroken && !westNeighbourWall.isEdge) then
+        if (!movements.contains(grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() - 1))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() - 1)
+      else if (westNeighbourWall.isGoal) then
+          println("Found a solution")
+          solutions.prepend(movements.clone())
+
+      // Check if there's overpass to north
+      if (!northNeighbourWall.isEdge && grid(currentSquare.getGridPosY() - 1)(currentSquare.getGridPosX()).hasVecticalOverpass) then
+        if (!movements.contains(grid(currentSquare.getGridPosY() - 2)(currentSquare.getGridPosX()))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY() - 2)(currentSquare.getGridPosX())
+
+      // Check if there's overpass to east
+      if (!eastNeighbourWall.isEdge && grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 1).hasHorizontalOverpass) then
+        if (!movements.contains(grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 2))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() + 2)
+
+      // Check if there's overpass to south
+      if (!southNeighbourWall.isEdge && grid(currentSquare.getGridPosY() + 1)(currentSquare.getGridPosX()).hasVecticalOverpass) then
+        if (!movements.contains(grid(currentSquare.getGridPosY() + 2)(currentSquare.getGridPosX()))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY() + 2)(currentSquare.getGridPosX())
+
+      // Check if there's overpass to west
+      if (!westNeighbourWall.isEdge && grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() - 1).hasHorizontalOverpass) then
+        if (!movements.contains(grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() - 2))) then
+          connectedNeighbours += grid(currentSquare.getGridPosY())(currentSquare.getGridPosX() - 2)
+
+      // Check if current square counts as intersection and move to next square
+      if (connectedNeighbours.length > 1) then
+        println("New intersection")
+        val movementsBeforeNext = movements.clone()
+        println(s"Moving to neighbour ${connectedNeighbours.head.getGridPosX()} ${connectedNeighbours.head.getGridPosY()}")
+        println(s"Connected Neighbours length: ${connectedNeighbours.length}")
+        movements.prepend(connectedNeighbours.head)
+        connectedNeighbours = connectedNeighbours.drop(1).clone()
+        intersections = intersections.prepend((movementsBeforeNext, connectedNeighbours))
+
+      // Only one neighbour. Move there
+      else if (connectedNeighbours.length == 1) then
+        println("Only one neighbour")
+        movements.prepend(connectedNeighbours.head)
+
+      // Backtrack to last intersection
+      else
+        println("Dead end")
+        // Check that there is a untried intersection left
+        if (intersections.nonEmpty) then
+          // Check that last intersection has paths that have not been tried already
+          if (intersections.head._2.isEmpty) then
+            intersections = intersections.drop(1)
+          else
+            println(s"Movement length should reset to ${intersections.head._1.length}")
+            movements = intersections.head._1
+            movements.prepend(intersections.head._2.head)
+            intersections.update(0, (intersections.head._1.clone(), intersections.head._2.drop(1)))
+        else
+          everythingTried = true
+
+
+    // Calculate the shortest path
+    var shortestSolution: Buffer[Square] = solutions.head
+    for i <- solutions do
+      if (i.length < shortestSolution.length) then
+        shortestSolution = i
+
+    println(s"Shortest solution length: ${shortestSolution.length}")
+    shortestSolution
+
 }

@@ -10,12 +10,13 @@ import scalafx.scene.canvas.{Canvas, GraphicsContext}
 import scalafx.scene.control.{Menu, MenuBar, MenuItem}
 import scalafx.scene.control.Button
 import scalafx.scene.layout.{BorderPane, HBox}
-import scalafx.scene.paint.Color.{Blue, Green, Red, rgb}
+import scalafx.scene.paint.Color.{Blue, Green, Red, White, Yellow, rgb}
 import scalafx.scene.shape.Rectangle
 import scalafx.scene.input.{KeyCode, KeyEvent}
 import scalafx.scene.image.ImageView
 import scalafx.Includes.*
 import scalafx.animation.AnimationTimer
+import scalafx.scene.text.Font
 
 object Main extends JFXApp3 {
 
@@ -53,8 +54,35 @@ object Main extends JFXApp3 {
               graphics.fill = Green
               graphics.fillRect(x = j.getPosX() + j.getSize() / 4, y = j.getPosY() - j.getSize() / 4, j.getSize() / 2, j.getSize() + j.getSize() / 2)
 
+        if (game.level.showSolution) then
+          for (i <- game.level.solution) do
+            graphics.fill = Yellow
+            graphics.fillRect(i.getPosX() + i.getSize() / 4, i.getPosY() + i.getSize() / 4, i.getSize() / 2, i.getSize() / 2)
+
         graphics.fill = Blue
         graphics.fillRect(game.player.getPosX, game.player.getPosY, game.player.size, game.player.size)
+
+        if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
+          val j = game.player.currentSquare
+          graphics.fill = Green
+          graphics.fillRect(x = j.getPosX() + j.getSize() / 4, y = j.getPosY() - j.getSize() / 4, j.getSize() / 2, j.getSize() + j.getSize() / 2)
+        if (game.player.currentSquare.hasHorizontalOverpass && !game.player.onHorizontalOverpass) then
+          val j = game.player.currentSquare
+          graphics.fill = Green
+          graphics.fillRect(j.getPosX() - j.getSize() / 4, j.getPosY() + j.getSize() / 4, j.getSize() + j.getSize() / 2, j.getSize() / 2)
+
+
+
+
+        graphics.fill = Blue
+        graphics.font = Font("", 20)
+        graphics.fillText("Timer: " + game.level.timer, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 2)
+        graphics.fillText("Points: " + game.points, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 5)
+
+
+
+
+
 
         if (game.level.levelWon) then
           game.generateLevel(game.round)
@@ -67,10 +95,15 @@ object Main extends JFXApp3 {
 
     val second = 1_000_000_000L
     var lastTick = 0L
+    var roundTimer = 0L
     val timer: AnimationTimer = AnimationTimer(now => {
       if lastTick == 0L || (now - lastTick > second / 64) then {
         lastTick = now
         tick(graphics)
+      }
+      if roundTimer == 0L || (now - roundTimer > second) then {
+        roundTimer = now
+        game.decreaseTimer()
       }
     })
 
@@ -119,77 +152,12 @@ object Main extends JFXApp3 {
             case KeyCode.A =>
               if (gameOn) then
                 game.player.moveLeft()
+            case KeyCode.Y =>
+              if (gameOn) then
+                game.solveLevel()
             case _ => println("Unknown input")
       }
     }
-
-    //val root = Pane() // Simple pane component
-    //val scene = Scene(parent = root) // Scene acts as a container for the scene graph
-    //stage.scene = scene // Assigning the new scene as the current scene for the stage
-
-/**
-    def drawGrid() =
-
-
-      for (i <- game.level.wallGridHorizontal) do
-        for (j <- i) do
-          val wall = new Rectangle :
-            x = j.getPosX()
-            y = j.getPosY()
-            width = j.getLength()
-            height = j.getWidth()
-            if (!j.isBroken) then
-              fill = Red
-            else
-              fill = rgb(0, 0, 0, 0)
-          root.children += wall
-
-      for (i <- game.level.wallGridVertical) do
-        for (j <- i) do
-          val wall = new Rectangle :
-            x = j.getPosX()
-            y = j.getPosY()
-            width = j.getWidth()
-            height = j.getLength()
-            if (!j.isBroken) then
-              fill = Red
-            else
-              fill = rgb(0, 0, 0, 0)
-          root.children += wall
-
-      for (i <- game.level.grid) do
-        for (j <- i) do
-          val square = new Rectangle :
-            x = j.getPosX()
-            y = j.getPosY()
-            width = j.getSize()
-            height = j.getSize()
-          root.children += square
-
-          if (j.hasHorizontalOverpass) then
-            val overpass = new Rectangle :
-              x = j.getPosX() - j.getSize() / 4
-              y = j.getPosY() + j.getSize() / 4
-              width = j.getSize() + j.getSize() / 2
-              height = j.getSize() / 2
-              fill = Green
-            root.children += overpass
-          if (j.hasVecticalOverpass) then
-            val overpass = new Rectangle :
-              x = j.getPosX() + j.getSize() / 4
-              y = j.getPosY() - j.getSize() / 4
-              width = j.getSize() / 2
-              height = j.getSize() + j.getSize() / 2
-              fill = Green
-            root.children += overpass
-      player.x = game.player.getPosX
-      player.y = game.player.getPosY
-      player.width = game.player.size
-      player.height = game.player.size
-      player.fill = Blue
-      root.children += player
-*/
-
 
 
 }

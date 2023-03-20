@@ -8,6 +8,7 @@ class Game {
   var level: Level = _
   var levelLoaded = false
   var player: Player = _
+  var points: Int = 0
 
   var mapSizeX: Int = 20
   var mapSizeY: Int = 15
@@ -35,6 +36,9 @@ class Game {
 
   def update(): Unit =
     updateWinLoseCondition()
+    
+  def decreaseTimer(): Unit =
+    level.timer -= 1
 
 
   def updateWinLoseCondition(): Unit =
@@ -42,21 +46,26 @@ class Game {
       if i.isHorizontal then
         if (player.posX >= i.getPosX() && player.posX <= i.getPosX() + i.getLength() && player.posY >= i.getPosY() && player.posY <= i.getPosY() + i.getWidth()) then
           round += 1
+          points += level.timer + 100 + round * 10
+          roundLength -= 10
           level.levelWon = true
           levelLoaded = false
       else
         if (player.posX >= i.getPosX() && player.posX <= i.getPosX() + i.getWidth() && player.posY >= i.getPosY() && player.posY <= i.getPosY() + i.getLength()) then
           round += 1
+          points += level.timer + 100 + round * 10
+          roundLength -= 10
           level.levelWon = true
           levelLoaded = false
     if level.timer <= 0 then
       round = 0
       level.levelLost = true
       levelLoaded = false
-
-
-
-
+      
+      
+  def solveLevel(): Unit =
+    level.solution = level.solve()
+    level.showSolution = true
 }
 
 
