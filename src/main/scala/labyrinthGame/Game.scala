@@ -2,6 +2,8 @@ package labyrinthGame
 
 import scala.collection.mutable.Buffer
 import scala.math.max
+import java.io.{FileReader, FileNotFoundException, BufferedReader, IOException, FileWriter, BufferedWriter}
+import scala.util.Random
 class Game {
   // Game round tracker
   var round = 0
@@ -24,7 +26,73 @@ class Game {
     level.generateLabyrinth()
     initializeLevel()
     levelLoaded = true
+    println(level.seed)
     level.grid
+
+
+  def readFile(fileName: String): Seq[String] =
+    try
+      val fileIn = FileReader(fileName)
+      val linesIn = BufferedReader(fileIn)
+      try
+        var resList = LazyList
+                      .continually(linesIn.readLine())
+                      .takeWhile(_ != null)
+                      .toSeq
+        for i <- resList do
+          println(i)
+        resList
+      finally
+        fileIn.close()
+        linesIn.close()
+      end try
+    catch
+      case notFound: FileNotFoundException =>
+        println("File not found")
+        Seq[String]()
+      case e: IOException =>
+        println("Reading finished with an error")
+        Seq[String]()
+
+  def loadLevel(fileName: String): Buffer[Buffer[Square]] =
+    this.round = 0
+    val levelInfo = readFile(fileName)
+    if levelInfo.length != 5 then
+      println("Incorrect level format")
+    this.level = new Level(levelInfo(0).toInt, levelInfo(1).toInt, levelInfo(2).toInt, levelInfo(3).toInt)
+    level.seed = levelInfo(4).toLong
+    level.rand = new Random(level.seed)
+    level.initalizeGrid()
+    level.pickStartingPosition()
+    level.generateLabyrinth()
+    initializeLevel()
+    levelLoaded = true
+    level.grid
+
+  def saveLevel(fileName: String) =
+    val arr: Seq[String] = Seq(level.sizeX.toString, level.sizeY.toString, level.squareLength.toString, level.roundLength.toString, level.seed.toString)
+    try
+      val filesOut = FileWriter(fileName)
+      val linesOut = BufferedWriter(filesOut)
+      try
+        for
+          i <- arr
+          if i != null
+        do
+          // println(i)
+          linesOut.write(i)
+          linesOut.newLine()
+      finally
+        linesOut.close()
+        println("filesOut closed")
+        filesOut.close()
+        println("linesOut closed")
+      end try
+    catch
+      case notFound: FileNotFoundException =>
+        println("File not found")
+      case e: IOException =>
+        println("Error writing a file: " + e)
 
   def placePlayer(level: Level): Unit =
     player = new Player(level)

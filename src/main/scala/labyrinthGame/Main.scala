@@ -7,7 +7,7 @@ import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.beans.property.{BooleanProperty, IntegerProperty, ObjectProperty}
 import scalafx.scene.Scene
 import scalafx.scene.canvas.{Canvas, GraphicsContext}
-import scalafx.scene.control.{Menu, MenuBar, MenuItem}
+import scalafx.scene.control.{Menu, MenuBar, MenuItem, TextField, Label}
 import scalafx.scene.control.Button
 import scalafx.scene.layout.{BorderPane, HBox}
 import scalafx.scene.paint.Color.{Blue, Green, Red, White, Yellow, rgb}
@@ -17,15 +17,62 @@ import scalafx.scene.image.ImageView
 import scalafx.Includes.*
 import scalafx.animation.AnimationTimer
 import scalafx.scene.text.Font
+import scalafx.event.ActionEvent
 
 object Main extends JFXApp3 {
 
+  var levelLoaded: Boolean = false
   var gameOn: Boolean = false
   var game: Game = _
 
   def initializeGame(): Unit =
     game = new Game
     game.generateLevel(0)
+
+  def loadLevel(stage: PrimaryStage): Unit =
+    game = new Game
+    game.levelLoaded = false
+    gameOn = false
+    var fileName = ""
+    val inputScene = new Scene(400, 400) {
+      val label = new Label("Type the name of the level file to load")
+      label.layoutX = 20
+      label.layoutY = 20
+
+      val textField = new TextField
+      textField.layoutX = 20
+      textField.layoutY = 50
+      content = List(label, textField)
+
+      textField.onAction = (e:ActionEvent) => {
+        fileName = "levels/" + textField.text.apply() + ".txt"
+        levelLoaded = true
+        game.loadLevel(fileName)
+        gameOn = true
+        start()
+      }
+    }
+    stage.delegate.setScene(inputScene)
+
+  def saveLevel(stage: PrimaryStage): Unit =
+    var fileName = ""
+    val inputScene = new Scene(400, 400) {
+      val label = new Label("Type a name for the level")
+      label.layoutX = 20
+      label.layoutY = 20
+
+      val textField = new TextField
+      textField.layoutX = 20
+      textField.layoutY = 50
+      content = List(label, textField)
+
+      textField.onAction = (e:ActionEvent) => {
+        fileName = "levels/" + textField.text.apply() + ".txt"
+        game.saveLevel(fileName)
+        start()
+      }
+    }
+    stage.delegate.setScene(inputScene)
 
   def tick(graphics: GraphicsContext): Unit =
       if (game.levelLoaded) then
@@ -71,21 +118,14 @@ object Main extends JFXApp3 {
           graphics.fill = Green
           graphics.fillRect(j.getPosX() - j.getSize() / 4, j.getPosY() + j.getSize() / 4, j.getSize() + j.getSize() / 2, j.getSize() / 2)
 
-
-
-
         graphics.fill = Blue
         graphics.font = Font("", 20)
         graphics.fillText("Timer: " + game.level.timer, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 2)
         graphics.fillText("Points: " + game.points, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 5)
 
-
-
-
-
-
         if (game.level.levelWon) then
           game.generateLevel(game.round)
+
 
 
 
@@ -101,7 +141,7 @@ object Main extends JFXApp3 {
         lastTick = now
         tick(graphics)
       }
-      if roundTimer == 0L || (now - roundTimer > second) then {
+      if gameOn && (roundTimer == 0L || (now - roundTimer > second)) then {
         roundTimer = now
         game.decreaseTimer()
       }
@@ -116,15 +156,28 @@ object Main extends JFXApp3 {
         rootPane.top = new MenuBar {
           menus = List {
             new Menu("Game") {
-              items = List {
+              items = List (
                 new MenuItem("Start game") {
                   onAction = { _ =>
                     gameOn = true
                     initializeGame()
                     timer.start()
+                    stage.fullScreen = true
+                  }
+                },
+                new MenuItem("Load labyrinth") {
+                  onAction = { _ =>
+                    loadLevel(stage)
+                  }
+                },
+                new MenuItem("Save labyrinth") {
+                  onAction = { _ =>
+                    game.levelLoaded = false
+                    gameOn = false
+                    saveLevel(stage)
                   }
                 }
-              }
+              )
             }
           }
         }
@@ -157,6 +210,9 @@ object Main extends JFXApp3 {
                 game.solveLevel()
             case _ => println("Unknown input")
       }
+      if levelLoaded then
+        levelLoaded = false
+        timer.start()
     }
 
 
