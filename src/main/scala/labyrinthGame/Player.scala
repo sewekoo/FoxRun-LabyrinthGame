@@ -29,7 +29,7 @@ class Player(level: Level) {
         if (posX >= j.getPosX() && posX <= (j.getPosX() + level.getSquareSize - size) && posY >= j.getPosY() && posY <= (j.getPosY() + level.getSquareSize - size)) then
           currentSquare = j
           onSquare = true
-          println(s"Current square located. Square pos: x:${currentSquare.getGridPosX()} y: ${currentSquare.getGridPosY()}")
+          //println(s"Current square located. Square pos: x:${currentSquare.getGridPosX()} y: ${currentSquare.getGridPosY()}")
           if (dir == 0 && (posY >= currentSquare.getPosY() && posY <= currentSquare.getPosY() + 5)) then
             val upWall = level.wallGridHorizontal(currentSquare.getGridPosY())(currentSquare.getGridPosX())
             if (upWall.isBroken) then
