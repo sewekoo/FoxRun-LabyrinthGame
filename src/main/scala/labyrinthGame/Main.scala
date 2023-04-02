@@ -21,7 +21,7 @@ import scalafx.event.ActionEvent
 
 import java.awt.GraphicsEnvironment
 import java.awt.DisplayMode
-import java.io.{BufferedWriter, FileNotFoundException, FileWriter, IOException}
+import java.io.{BufferedWriter, FileNotFoundException, FileWriter, IOException, File}
 import scala.collection.mutable.Buffer
 
 object Main extends JFXApp3 {
@@ -192,7 +192,6 @@ object Main extends JFXApp3 {
     else
       (splittedString.head.toInt, "-")
 
-
   def showScores(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
     if (!gameOn) then
@@ -225,7 +224,34 @@ object Main extends JFXApp3 {
     }
     stage.delegate.setScene(scoreScene)
 
+  def showCustoms(stage: JFXApp3.PrimaryStage): Unit =
+    val midPointX = stage.width.toInt / 2
+    val dir = new File("levels")
+    val levels = dir.listFiles.filter(_.isFile).toList
+    var currentY = 50
+    val customScene = new Scene(400, 400) {
+      val label = new Label("Saved levels:")
+      label.layoutX = midPointX
+      label.layoutY = 20
+      val buttonBuffer: Buffer[Button] = Buffer[Button]()
+      for i <- levels do
+        val currentButton = new Button(i.getName.dropRight(4))
+        currentButton.layoutX = midPointX
+        currentButton.layoutY = currentY
+        currentY += 30
+        currentButton.onAction = (e:ActionEvent) => {
+          game = new Game
+          val fileName = "levels/" + i.getName
+          levelLoaded = true
+          game.loadLevel(fileName)
+          gameOn = true
+          start()
+        }
+        buttonBuffer += currentButton
+      content = List(label) ::: buttonBuffer.toList
 
+    }
+    stage.delegate.setScene(customScene)
 
   def showHowTo(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
@@ -282,6 +308,9 @@ object Main extends JFXApp3 {
       }
       scoreboard.onAction = (e:ActionEvent) => {
         showScores(stage)
+      }
+      customLevel.onAction= (e:ActionEvent) => {
+        showCustoms(stage)
       }
     }
     stage.delegate.setScene(menuScene)
