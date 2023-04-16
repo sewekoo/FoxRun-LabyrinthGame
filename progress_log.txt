@@ -33,3 +33,16 @@ Report 20.03.2023
 - As stated before largest bug to fix at the moment is to prevent player going out-of-bounds when on top of invisible walls.
 - I think I'm currently in schedule. My game is somewhat "playable" which was my goal.
 - Estimated working hours for past two weeks are around 15 hours.
+
+Report 3.4.2023
+- Implemented labyrinth saving and loading to .txt files
+- Implemented main menu and most of the menu functions
+- Implemented scoreboard with scores saving to file
+- Custom levels are also loadable through main menu
+- Biggest difficulties were working around ScalaFX
+    - Implementing menu with different scenes was difficult since I switched to using ticks with GraphicsContext for drawing
+    - However I managed to impelement both of these draw methods working together.
+- My game is mostly in schedule. Only big thing that has to be implemented is the view to allow map sizes that are not limited to screen.
+- I overlooked this in my schedule plan, but I left some room at the end for polishing so I should have time for implementing this functionality.
+- Rest of the time will be used for polishing graphics and gameplay.
+- Estimated working hours for past two weeks are around 10 hours.
