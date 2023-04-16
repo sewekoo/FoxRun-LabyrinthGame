@@ -128,10 +128,11 @@ class Game {
     if level.timer <= 0 then
       round = 0
       level.levelLost = true
-      levelLoaded = false
       
       
   def solveLevel(): Unit =
+    player.currentSquare = level.startingPoint
+    player.resetPos()
     level.solution = level.solve()
     level.showSolution = true
 }

@@ -1,0 +1,11 @@
+[debug] > Exec(git status, None, None)
+[error] Expected ID character
+[error] Not a valid command: git (similar: exit, plugin, set)
+[error] Expected project ID
+[error] Expected configuration
+[error] Expected ':'
+[error] Expected key
+[error] Not a valid key: git (similar: bgList, bgWaitFor, ivySbt)
+[error] git status
+[error]    ^
+[debug] > Exec(idea-shell, None, None)

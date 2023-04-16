@@ -13,7 +13,7 @@ import scalafx.scene.layout.{BorderPane, HBox}
 import scalafx.scene.paint.Color.{Blue, Green, Red, White, Yellow, rgb}
 import scalafx.scene.shape.Rectangle
 import scalafx.scene.input.{KeyCode, KeyEvent}
-import scalafx.scene.image.ImageView
+import scalafx.scene.image.{Image, ImageView}
 import scalafx.Includes.*
 import scalafx.animation.AnimationTimer
 import scalafx.scene.text.Font
@@ -21,7 +21,7 @@ import scalafx.event.ActionEvent
 
 import java.awt.GraphicsEnvironment
 import java.awt.DisplayMode
-import java.io.{BufferedWriter, FileNotFoundException, FileWriter, IOException, File}
+import java.io.{BufferedWriter, File, FileInputStream, FileNotFoundException, FileWriter, IOException, InputStream}
 import scala.collection.mutable.Buffer
 
 object Main extends JFXApp3 {
@@ -29,7 +29,211 @@ object Main extends JFXApp3 {
   var levelLoaded: Boolean = false
   var gameStarted: Boolean = false
   var gameOn: Boolean = false
+  var gameObjectCreated = false
   var game: Game = _
+  var graphics: GraphicsContext = null
+  val second = 1_000_000_000L
+  var lastTick = 0L
+  var roundTimer = 0L
+  var animationNum = 0
+  val timer: AnimationTimer = AnimationTimer(now => {
+      if lastTick == 0L || (now - lastTick > second / 64) then {
+        lastTick = now
+        tick(graphics, stage)
+        animationNum += 1
+        if (animationNum >= 30) then
+          animationNum = 0
+      }
+      if gameOn && (roundTimer == 0L || (now - roundTimer > second)) then {
+        roundTimer = now
+        game.decreaseTimer()
+      }
+    })
+
+  // Offsets for moving zoomed out map
+  var xOffset = 0
+  var yOffset = 0
+
+  // Flag to enable player camera follow (turned off for debug to show whole map)
+  var playerCentered: Boolean = true
+
+  // Flag for player movement animation
+  var playerMoving: Boolean = false
+
+  // Flag for player facing direction
+  var facingRight: Boolean = true
+
+  // Player idle images. 15 different animation pics
+  val plrstream: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_00.png")
+  val plrimg = new Image(plrstream)
+  val plrstream1: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_01.png")
+  val plrimg1 = new Image(plrstream1)
+  val plrstream2: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_02.png")
+  val plrimg2 = new Image(plrstream2)
+  val plrstream3: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_03.png")
+  val plrimg3 = new Image(plrstream3)
+  val plrstream4: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_04.png")
+  val plrimg4 = new Image(plrstream4)
+  val plrstream5: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_05.png")
+  val plrimg5 = new Image(plrstream5)
+  val plrstream6: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_06.png")
+  val plrimg6 = new Image(plrstream6)
+  val plrstream7: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_07.png")
+  val plrimg7 = new Image(plrstream7)
+  val plrstream8: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_08.png")
+  val plrimg8 = new Image(plrstream8)
+  val plrstream9: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_09.png")
+  val plrimg9 = new Image(plrstream9)
+  val plrstream10: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_10.png")
+  val plrimg10 = new Image(plrstream10)
+  val plrstream11: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_11.png")
+  val plrimg11 = new Image(plrstream11)
+  val plrstream12: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_12.png")
+  val plrimg12 = new Image(plrstream12)
+  val plrstream13: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_13.png")
+  val plrimg13 = new Image(plrstream13)
+  val plrstream14: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_14.png")
+  val plrimg14 = new Image(plrstream14)
+
+  // Player idle flipped image
+  val plrstreamF: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_00F.png")
+  val plrimgF = new Image(plrstreamF)
+  val plrstream1F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_01F.png")
+  val plrimg1F = new Image(plrstream1F)
+  val plrstream2F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_02F.png")
+  val plrimg2F = new Image(plrstream2F)
+  val plrstream3F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_03F.png")
+  val plrimg3F = new Image(plrstream3F)
+  val plrstream4F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_04F.png")
+  val plrimg4F = new Image(plrstream4F)
+  val plrstream5F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_05F.png")
+  val plrimg5F = new Image(plrstream5F)
+  val plrstream6F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_06F.png")
+  val plrimg6F = new Image(plrstream6F)
+  val plrstream7F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_07F.png")
+  val plrimg7F = new Image(plrstream7F)
+  val plrstream8F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_08F.png")
+  val plrimg8F = new Image(plrstream8F)
+  val plrstream9F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_09F.png")
+  val plrimg9F = new Image(plrstream9F)
+  val plrstream10F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_10F.png")
+  val plrimg10F = new Image(plrstream10F)
+  val plrstream11F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_11F.png")
+  val plrimg11F = new Image(plrstream11F)
+  val plrstream12F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_12F.png")
+  val plrimg12F = new Image(plrstream12F)
+  val plrstream13F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_13F.png")
+  val plrimg13F = new Image(plrstream13F)
+  val plrstream14F: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_14F.png")
+  val plrimg14F = new Image(plrstream14F)
+
+  // Player moving right image
+  val plrMoveRstream: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_00.png")
+  val plrMoveRimg = new Image(Main.plrMoveRstream)
+  val plrMoveRstream1: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_01.png")
+  val plrMoveRimg1 = new Image(Main.plrMoveRstream1)
+  val plrMoveRstream2: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_02.png")
+  val plrMoveRimg2 = new Image(Main.plrMoveRstream2)
+  val plrMoveRstream3: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_03.png")
+  val plrMoveRimg3 = new Image(Main.plrMoveRstream3)
+  val plrMoveRstream4: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_04.png")
+  val plrMoveRimg4 = new Image(Main.plrMoveRstream4)
+  val plrMoveRstream5: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_05.png")
+  val plrMoveRimg5 = new Image(Main.plrMoveRstream5)
+  val plrMoveRstream6: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_06.png")
+  val plrMoveRimg6 = new Image(Main.plrMoveRstream6)
+  val plrMoveRstream7: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_07.png")
+  val plrMoveRimg7 = new Image(Main.plrMoveRstream7)
+  val plrMoveRstream8: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_08.png")
+  val plrMoveRimg8 = new Image(Main.plrMoveRstream8)
+  val plrMoveRstream9: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_09.png")
+  val plrMoveRimg9 = new Image(Main.plrMoveRstream9)
+  val plrMoveRstream10: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_10.png")
+  val plrMoveRimg10 = new Image(Main.plrMoveRstream10)
+  val plrMoveRstream11: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_11.png")
+  val plrMoveRimg11 = new Image(Main.plrMoveRstream11)
+  val plrMoveRstream12: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_12.png")
+  val plrMoveRimg12 = new Image(Main.plrMoveRstream12)
+  val plrMoveRstream13: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_13.png")
+  val plrMoveRimg13 = new Image(Main.plrMoveRstream13)
+  val plrMoveRstream14: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_14.png")
+  val plrMoveRimg14 = new Image(Main.plrMoveRstream14)
+
+  // Player moving right flipped image
+  val plrMoveRstreamF: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_00F.png")
+  val plrMoveRimgF = new Image(Main.plrMoveRstreamF)
+  val plrMoveRstream1F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_01F.png")
+  val plrMoveRimg1F = new Image(Main.plrMoveRstream1F)
+  val plrMoveRstream2F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_02F.png")
+  val plrMoveRimg2F = new Image(Main.plrMoveRstream2F)
+  val plrMoveRstream3F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_03F.png")
+  val plrMoveRimg3F = new Image(Main.plrMoveRstream3F)
+  val plrMoveRstream4F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_04F.png")
+  val plrMoveRimg4F = new Image(Main.plrMoveRstream4F)
+  val plrMoveRstream5F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_05F.png")
+  val plrMoveRimg5F = new Image(Main.plrMoveRstream5F)
+  val plrMoveRstream6F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_06F.png")
+  val plrMoveRimg6F = new Image(Main.plrMoveRstream6F)
+  val plrMoveRstream7F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_07F.png")
+  val plrMoveRimg7F = new Image(Main.plrMoveRstream7F)
+  val plrMoveRstream8F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_08F.png")
+  val plrMoveRimg8F = new Image(Main.plrMoveRstream8F)
+  val plrMoveRstream9F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_09F.png")
+  val plrMoveRimg9F = new Image(Main.plrMoveRstream9F)
+  val plrMoveRstream10F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_10F.png")
+  val plrMoveRimg10F = new Image(Main.plrMoveRstream10F)
+  val plrMoveRstream11F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_11F.png")
+  val plrMoveRimg11F = new Image(Main.plrMoveRstream11F)
+  val plrMoveRstream12F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_12F.png")
+  val plrMoveRimg12F = new Image(Main.plrMoveRstream12F)
+  val plrMoveRstream13F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_13F.png")
+  val plrMoveRimg13F = new Image(Main.plrMoveRstream13F)
+  val plrMoveRstream14F: InputStream = new FileInputStream("assets/foxy/animation/run/foxy-run_14F.png")
+  val plrMoveRimg14F = new Image(Main.plrMoveRstream14F)
+
+  // Player debug image
+  val dplrstream: InputStream = new FileInputStream("assets/player.png")
+  val dplrimg = new Image(dplrstream)
+
+  // Wall horizontal image
+  val wallstreamh: InputStream = new FileInputStream("assets/wallhorizontal.png")
+  val wallhimg = new Image(wallstreamh)
+
+  // Wall horizontal large image
+  val wallstreamhL: InputStream = new FileInputStream("assets/wallhorizontalL.png")
+  val wallhimgL = new Image(wallstreamhL)
+
+  // Wall vertical image
+  val wallstreamv: InputStream = new FileInputStream("assets/wallvertical.png")
+  val wallvimg = new Image(wallstreamv)
+
+  // Wall vertical large image
+  val wallstreamvL: InputStream = new FileInputStream("assets/wallverticalL.png")
+  val wallvimgL = new Image(wallstreamvL)
+
+  // Floor image
+  val floorstream: InputStream = new FileInputStream("assets/floor.png")
+  val floorimg = new Image(floorstream)
+
+  // Floor large image
+  val floorLstream: InputStream = new FileInputStream("assets/floorlarge.png")
+  val floorLimg = new Image(floorLstream)
+
+  // Horizontal overpass image
+  val overphorstream: InputStream = new FileInputStream("assets/horizontalbridge.png")
+  val overpasshimg = new Image(overphorstream)
+
+  // Horizontal overpass large image
+  val overphorstreamL: InputStream = new FileInputStream("assets/horizontalbridgeL.png")
+  val overpasshimgL = new Image(overphorstreamL)
+
+  // Vertical overpass image
+  val overpverstream: InputStream = new FileInputStream("assets/verticalbridge.png")
+  val overpassvimg = new Image(overpverstream)
+
+  // Vertical overpass large image
+  val overpverstreamL: InputStream = new FileInputStream("assets/verticalbridgeL.png")
+  val overpassvimgL = new Image(overpverstreamL)
 
   def initializeGame(): Unit =
     game = new Game
@@ -135,55 +339,297 @@ object Main extends JFXApp3 {
       if (game.levelLoaded) then
         game.update()
         graphics.fill = rgb(0, 0, 0, 1.0)
-        graphics.fillRect(0, 0, game.mapSizeX * (game.squareSize * 1.5), game.mapSizeY * (game.squareSize * 1.5))
-        for (i <- game.level.wallGridHorizontal) do
-          for (j <- i) do
-            if (!j.isBroken) then
-              graphics.fill = Red
-              graphics.fillRect(j.getPosX(), j.getPosY(), j.getLength(), j.getWidth())
-        for (i <- game.level.wallGridVertical) do
-          for (j <- i) do
-            if (!j.isBroken) then
-              graphics.fill = Red
-              graphics.fillRect(j.getPosX(), j.getPosY(), j.getWidth(), j.getLength())
+        graphics.fillRect(0, 0, stage.width.toInt, stage.height.toInt)
 
-        for (i <- game.level.grid) do
-          for (j <- i) do
-            graphics.fill = rgb(0, 0, 0, 1.0)
-            graphics.fillRect(j.getPosX(), j.getPosY(), j.getSize(), j.getSize())
-            if (j.hasHorizontalOverpass) then
-              graphics.fill = Green
-              graphics.fillRect(j.getPosX() - j.getSize() / 4, j.getPosY() + j.getSize() / 4, j.getSize() + j.getSize() / 2, j.getSize() / 2)
-            if (j.hasVecticalOverpass) then
-              graphics.fill = Green
-              graphics.fillRect(x = j.getPosX() + j.getSize() / 4, y = j.getPosY() - j.getSize() / 4, j.getSize() / 2, j.getSize() + j.getSize() / 2)
+        if (playerCentered) then
+          val playersizeX: Int = plrimg.width.toInt
+          val playersize: Int = plrimg.height.toInt
+          val playerXtrue = (stage.width.toInt / 2) - (playersizeX / 2)
+          val playerX = (stage.width.toInt / 2) - (playersize / 2)
+          val playerY = (stage.height.toInt / 2) - (playersize / 2)
+          val sizeMultiplier = playersize / game.player.size
 
-        if (game.level.showSolution) then
-          for (i <- game.level.solution) do
-            graphics.fill = Yellow
-            graphics.fillRect(i.getPosX() + i.getSize() / 4, i.getPosY() + i.getSize() / 4, i.getSize() / 2, i.getSize() / 2)
+          // Draw tiles relative to player
+          for (i <- game.level.grid) do
+            for (j <- i) do
+              val diffToPlrX: Int = j.getPosX() - game.player.getPosX
+              val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+              val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+              val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+              val relativeX: Int = playerX + relativeXdiff
+              val relativeY: Int = playerY + relativeYdiff
+              val minX = 0 - (floorLimg.width.toInt + 10)
+              val minY = 0 - (floorLimg.height.toInt + 10)
+              if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                graphics.drawImage(floorLimg, relativeX, relativeY)
 
-        graphics.fill = Blue
-        graphics.fillRect(game.player.getPosX, game.player.getPosY, game.player.size, game.player.size)
+          // Draw vertical walls relative to player
+          for (i <- game.level.wallGridVertical) do
+            for (j <- i) do
+              if (!j.isBroken) then
+                val diffToPlrX: Int = j.getPosX()  - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (wallvimgL.width.toInt + 10)
+                val minY = 0 - (wallvimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(wallvimgL, relativeX, relativeY)
 
-        if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
-          val j = game.player.currentSquare
-          graphics.fill = Green
-          graphics.fillRect(x = j.getPosX() + j.getSize() / 4, y = j.getPosY() - j.getSize() / 4, j.getSize() / 2, j.getSize() + j.getSize() / 2)
-        if (game.player.currentSquare.hasHorizontalOverpass && !game.player.onHorizontalOverpass) then
-          val j = game.player.currentSquare
-          graphics.fill = Green
-          graphics.fillRect(j.getPosX() - j.getSize() / 4, j.getPosY() + j.getSize() / 4, j.getSize() + j.getSize() / 2, j.getSize() / 2)
+          // Draw horizontal walls relative to player
+          for (i <- game.level.wallGridHorizontal) do
+            for (j <- i) do
+              if (!j.isBroken) then
+                val diffToPlrX: Int = j.getPosX()  - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (wallhimgL.width.toInt + 10)
+                val minY = 0 - (wallhimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(wallhimgL, relativeX, relativeY)
+
+          // Draw overpass relative to player
+          for (i <- game.level.grid) do
+            for (j <- i) do
+              if (j.hasHorizontalOverpass) then
+                val diffToPlrX: Int = j.getPosX()  - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (overpasshimgL.width.toInt + 10)
+                val minY = 0 - (overpasshimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(overpasshimgL, relativeX - wallvimgL.getWidth.toInt, relativeY + 50)
+              if (j.hasVecticalOverpass) then
+                val diffToPlrX: Int = j.getPosX() - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (overpassvimgL.width.toInt + 10)
+                val minY = 0 - (overpassvimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(overpassvimgL, relativeX + 50, relativeY - floorLimg.getWidth.toInt / 4)
+
+          // Draw player
+          if (playerMoving) then
+            if (facingRight) then
+              if (animationNum < 2) then
+                graphics.drawImage(plrMoveRimg, playerXtrue, playerY)
+              else if (animationNum < 4) then
+                graphics.drawImage(plrMoveRimg1, playerXtrue, playerY)
+              else if (animationNum < 6) then
+                graphics.drawImage(plrMoveRimg2, playerXtrue, playerY)
+              else if (animationNum < 8) then
+                graphics.drawImage(plrMoveRimg3, playerXtrue, playerY)
+              else if (animationNum < 10) then
+                graphics.drawImage(plrMoveRimg4, playerXtrue, playerY)
+              else if (animationNum < 12) then
+                graphics.drawImage(plrMoveRimg5, playerXtrue, playerY)
+              else if (animationNum < 14) then
+                graphics.drawImage(plrMoveRimg6, playerXtrue, playerY)
+              else if (animationNum < 16) then
+                graphics.drawImage(plrMoveRimg7, playerXtrue, playerY)
+              else if (animationNum < 18) then
+                graphics.drawImage(plrMoveRimg8, playerXtrue, playerY)
+              else if (animationNum < 20) then
+                graphics.drawImage(plrMoveRimg9, playerXtrue, playerY)
+              else if (animationNum < 22) then
+                graphics.drawImage(plrMoveRimg10, playerXtrue, playerY)
+              else if (animationNum < 24) then
+                graphics.drawImage(plrMoveRimg11, playerXtrue, playerY)
+              else if (animationNum < 26) then
+                graphics.drawImage(plrMoveRimg12, playerXtrue, playerY)
+              else if (animationNum < 28) then
+                graphics.drawImage(plrMoveRimg13, playerXtrue, playerY)
+              else if (animationNum < 30) then
+                graphics.drawImage(plrMoveRimg14, playerXtrue, playerY)
+            else
+              if (animationNum < 2) then
+                graphics.drawImage(plrMoveRimgF, playerXtrue, playerY)
+              else if (animationNum < 4) then
+                graphics.drawImage(plrMoveRimg1F, playerXtrue, playerY)
+              else if (animationNum < 6) then
+                graphics.drawImage(plrMoveRimg2F, playerXtrue, playerY)
+              else if (animationNum < 8) then
+                graphics.drawImage(plrMoveRimg3F, playerXtrue, playerY)
+              else if (animationNum < 10) then
+                graphics.drawImage(plrMoveRimg4F, playerXtrue, playerY)
+              else if (animationNum < 12) then
+                graphics.drawImage(plrMoveRimg5F, playerXtrue, playerY)
+              else if (animationNum < 14) then
+                graphics.drawImage(plrMoveRimg6F, playerXtrue, playerY)
+              else if (animationNum < 16) then
+                graphics.drawImage(plrMoveRimg7F, playerXtrue, playerY)
+              else if (animationNum < 18) then
+                graphics.drawImage(plrMoveRimg8F, playerXtrue, playerY)
+              else if (animationNum < 20) then
+                graphics.drawImage(plrMoveRimg9F, playerXtrue, playerY)
+              else if (animationNum < 22) then
+                graphics.drawImage(plrMoveRimg10F, playerXtrue, playerY)
+              else if (animationNum < 24) then
+                graphics.drawImage(plrMoveRimg11F, playerXtrue, playerY)
+              else if (animationNum < 26) then
+                graphics.drawImage(plrMoveRimg12F, playerXtrue, playerY)
+              else if (animationNum < 28) then
+                graphics.drawImage(plrMoveRimg13F, playerXtrue, playerY)
+              else if (animationNum < 30) then
+                graphics.drawImage(plrMoveRimg14F, playerXtrue, playerY)
+          else
+            if (facingRight) then
+              if (animationNum < 2) then
+                graphics.drawImage(plrimg, playerXtrue, playerY)
+              else if (animationNum < 4) then
+                graphics.drawImage(plrimg1, playerXtrue, playerY)
+              else if (animationNum < 6) then
+                graphics.drawImage(plrimg2, playerXtrue, playerY)
+              else if (animationNum < 8) then
+                graphics.drawImage(plrimg3, playerXtrue, playerY)
+              else if (animationNum < 10) then
+                graphics.drawImage(plrimg4, playerXtrue, playerY)
+              else if (animationNum < 12) then
+                graphics.drawImage(plrimg5, playerXtrue, playerY)
+              else if (animationNum < 14) then
+                graphics.drawImage(plrimg6, playerXtrue, playerY)
+              else if (animationNum < 16) then
+                graphics.drawImage(plrimg7, playerXtrue, playerY)
+              else if (animationNum < 18) then
+                graphics.drawImage(plrimg8, playerXtrue, playerY)
+              else if (animationNum < 20) then
+                graphics.drawImage(plrimg9, playerXtrue, playerY)
+              else if (animationNum < 22) then
+                graphics.drawImage(plrimg10, playerXtrue, playerY)
+              else if (animationNum < 24) then
+                graphics.drawImage(plrimg11, playerXtrue, playerY)
+              else if (animationNum < 26) then
+                graphics.drawImage(plrimg12, playerXtrue, playerY)
+              else if (animationNum < 28) then
+                graphics.drawImage(plrimg13, playerXtrue, playerY)
+              else if (animationNum < 30) then
+                graphics.drawImage(plrimg14, playerXtrue, playerY)
+            else
+              if (animationNum < 2) then
+                graphics.drawImage(plrimgF, playerXtrue, playerY)
+              else if (animationNum < 4) then
+                graphics.drawImage(plrimg1F, playerXtrue, playerY)
+              else if (animationNum < 6) then
+                graphics.drawImage(plrimg2F, playerXtrue, playerY)
+              else if (animationNum < 8) then
+                graphics.drawImage(plrimg3F, playerXtrue, playerY)
+              else if (animationNum < 10) then
+                graphics.drawImage(plrimg4F, playerXtrue, playerY)
+              else if (animationNum < 12) then
+                graphics.drawImage(plrimg5F, playerXtrue, playerY)
+              else if (animationNum < 14) then
+                graphics.drawImage(plrimg6F, playerXtrue, playerY)
+              else if (animationNum < 16) then
+                graphics.drawImage(plrimg7F, playerXtrue, playerY)
+              else if (animationNum < 18) then
+                graphics.drawImage(plrimg8F, playerXtrue, playerY)
+              else if (animationNum < 20) then
+                graphics.drawImage(plrimg9F, playerXtrue, playerY)
+              else if (animationNum < 22) then
+                graphics.drawImage(plrimg10F, playerXtrue, playerY)
+              else if (animationNum < 24) then
+                graphics.drawImage(plrimg11F, playerXtrue, playerY)
+              else if (animationNum < 26) then
+                graphics.drawImage(plrimg12F, playerXtrue, playerY)
+              else if (animationNum < 28) then
+                graphics.drawImage(plrimg13F, playerXtrue, playerY)
+              else if (animationNum < 30) then
+                graphics.drawImage(plrimg14F, playerXtrue, playerY)
+
+          if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
+            val j = game.player.currentSquare
+            val diffToPlrX: Int = j.getPosX() - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (overpassvimgL.width.toInt + 10)
+                val minY = 0 - (overpassvimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(overpassvimgL, relativeX + 50, relativeY - floorLimg.getWidth.toInt / 4)
+          if (game.player.currentSquare.hasHorizontalOverpass && !game.player.onHorizontalOverpass) then
+            val j = game.player.currentSquare
+            val diffToPlrX: Int = j.getPosX()  - game.player.getPosX
+                val diffToPlrY: Int = j.getPosY() - game.player.getPosY
+                val relativeXdiff: Int = sizeMultiplier * diffToPlrX
+                val relativeYdiff: Int = sizeMultiplier * diffToPlrY
+                val relativeX: Int = playerX + relativeXdiff
+                val relativeY: Int = playerY + relativeYdiff
+                val minX = 0 - (overpasshimgL.width.toInt + 10)
+                val minY = 0 - (overpasshimgL.height.toInt + 10)
+                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                  graphics.drawImage(overpasshimgL, relativeX - wallvimgL.getWidth.toInt, relativeY + 50)
+
+        else
+          // Debug draw with whole map
+          // Tile draw
+          for (i <- game.level.grid) do
+            for (j <- i) do
+              //graphics.fill = rgb(0, 0, 0, 1.0)
+              //graphics.fillRect(j.getPosX(), j.getPosY(), j.getSize(), j.getSize())
+              graphics.drawImage(floorimg, j.getPosX() + xOffset, j.getPosY() + yOffset)
+
+          // Vertical wall draw
+          for (i <- game.level.wallGridVertical) do
+            for (j <- i) do
+              if (!j.isBroken) then
+                graphics.drawImage(wallvimg, j.getPosX() + xOffset, j.getPosY() + yOffset)
+
+          //Horizontal wall draw
+          for (i <- game.level.wallGridHorizontal) do
+            for (j <- i) do
+              if (!j.isBroken) then
+                graphics.drawImage(wallhimg, j.getPosX() + xOffset, j.getPosY() + yOffset)
+
+          // Overpass draw
+          for (i <- game.level.grid) do
+            for (j <- i) do
+              if (j.hasHorizontalOverpass) then
+                graphics.drawImage(overpasshimg, (j.getPosX() - j.getSize() / 4) + xOffset, j.getPosY() + yOffset)
+              if (j.hasVecticalOverpass) then
+                graphics.drawImage(overpassvimg, j.getPosX() + xOffset, (j.getPosY() - j.getSize() / 4) + yOffset)
+
+          if (game.level.showSolution) then
+            for (i <- game.level.solution) do
+              graphics.fill = Yellow
+              graphics.fillRect((i.getPosX() + i.getSize() / 4) + xOffset, (i.getPosY() + i.getSize() / 4) + yOffset, i.getSize() / 2, i.getSize() / 2)
+
+          // Player draw
+          graphics.fill = Blue
+          graphics.drawImage(dplrimg, game.player.getPosX + xOffset, game.player.getPosY + yOffset)
+          //graphics.fillRect(game.player.getPosX, game.player.getPosY, game.player.size, game.player.size)
+
+          if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
+            val j = game.player.currentSquare
+            graphics.drawImage(overpassvimg, j.getPosX(), y = j.getPosY() - j.getSize() / 4)
+          if (game.player.currentSquare.hasHorizontalOverpass && !game.player.onHorizontalOverpass) then
+            val j = game.player.currentSquare
+            graphics.drawImage(overpasshimg, j.getPosX() - j.getSize() / 4, j.getPosY())
 
         graphics.fill = Blue
         graphics.font = Font("", 20)
         graphics.fillText("Timer: " + game.level.timer, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 2)
         graphics.fillText("Points: " + game.points, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 5)
 
+        // Level win and lose handling
         if (game.level.levelWon) then
           game.generateLevel(game.round)
         if (game.level.levelLost) then
-          start()
+          playerCentered = false
+          game.solveLevel()
+          gameOn = false
 
   def formatScore(score: String): (Int, String) =
     val splittedString = score.split(" ")
@@ -225,6 +671,7 @@ object Main extends JFXApp3 {
     stage.delegate.setScene(scoreScene)
 
   def showCustoms(stage: JFXApp3.PrimaryStage): Unit =
+    playerCentered = true
     val midPointX = stage.width.toInt / 2
     val dir = new File("levels")
     val levels = dir.listFiles.filter(_.isFile).toList
@@ -294,6 +741,9 @@ object Main extends JFXApp3 {
       content = List(startGame, howTo, scoreboard, options, customLevel, exit)
 
       startGame.onAction = (e:ActionEvent) => {
+        xOffset = 0
+        yOffset = 0
+        playerCentered = true
         gameOn = true
         gameStarted = true
         initializeGame()
@@ -317,21 +767,6 @@ object Main extends JFXApp3 {
 
 
   override def start(): Unit =
-    var graphics: GraphicsContext = null
-
-    val second = 1_000_000_000L
-    var lastTick = 0L
-    var roundTimer = 0L
-    val timer: AnimationTimer = AnimationTimer(now => {
-      if lastTick == 0L || (now - lastTick > second / 64) then {
-        lastTick = now
-        tick(graphics, stage)
-      }
-      if gameOn && (roundTimer == 0L || (now - roundTimer > second)) then {
-        roundTimer = now
-        game.decreaseTimer()
-      }
-    })
 
     val gd = GraphicsEnvironment.getLocalGraphicsEnvironment.getDefaultScreenDevice
     stage = new PrimaryStage {
@@ -346,7 +781,10 @@ object Main extends JFXApp3 {
               items = List (
                 new MenuItem("New Game") {
                   onAction = { _ =>
+                    playerCentered = true
                     gameOn = true
+                    xOffset = 0
+                    yOffset = 0
                     initializeGame()
                     timer.start()
                     stage.fullScreen = true
@@ -366,11 +804,13 @@ object Main extends JFXApp3 {
                 },
                 new MenuItem("Load labyrinth") {
                   onAction = { _ =>
+                    playerCentered = true
                     loadLevel(stage)
                   }
                 },
                 new MenuItem("Quit") {
                   onAction = { _ =>
+                    game.level.timer = game.roundLength
                     gameOn = false
                     showMenu(stage)
                   }
@@ -387,25 +827,48 @@ object Main extends JFXApp3 {
           }
         }
         root = rootPane
+        onKeyReleased = (key: KeyEvent) =>
+          playerMoving = false
+
         onKeyPressed = (key: KeyEvent) =>
           //println("Recognized key input")
           key.code match
             case KeyCode.W =>
               //println("Up key pressed")
               if (gameOn) then
+                playerMoving = true
                 game.player.moveUp()
+              else
+                yOffset -= 3
             case KeyCode.S =>
               if (gameOn) then
+                playerMoving = true
                 game.player.moveDown()
+              else
+                yOffset += 3
             case KeyCode.D =>
               if (gameOn) then
+                playerMoving = true
+                facingRight = true
                 game.player.moveRight()
+              else
+                xOffset += 3
             case KeyCode.A =>
               if (gameOn) then
+                playerMoving = true
+                facingRight = false
                 game.player.moveLeft()
+              else
+                xOffset -= 3
             case KeyCode.Y =>
               if (gameOn) then
+                playerCentered = false
+                game.level.levelLost = true
+                gameOn = false
                 game.solveLevel()
+            case KeyCode.Space =>
+              if (game.level.levelLost) then
+                addScore(stage)
             case _ => println("Unknown input")
       }
       if levelLoaded then
@@ -414,12 +877,13 @@ object Main extends JFXApp3 {
 
     }
     if (gameStarted) then
+      gameObjectCreated = true
       gameStarted = false
       timer.start()
 
     if (!gameOn)
         showMenu(stage)
 
-    if (gameOn && game.level.levelLost) then
+    if (gameObjectCreated && game.level.levelLost) then
       addScore(stage)
 }

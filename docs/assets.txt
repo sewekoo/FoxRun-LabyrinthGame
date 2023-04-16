@@ -3,3 +3,15 @@ https://opengameart.org/content/16x16-pixel-art-dungeon-wall-and-cobblestone-flo
 
 Dungeon tileset:
 https://opengameart.org/content/dungeon-tileset
+
+Foxy:
+https://opengameart.org/content/foxy-2d-character-asset
+
+LPC Wooden Bridge Rework:
+https://opengameart.org/content/lpc-wooden-bridge-rework
+
+Seamless Wall:
+https://opengameart.org/content/seamless-wall
+
+Seamless Grass Texture II:
+https://opengameart.org/content/seamless-grass-texture-ii
