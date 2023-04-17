@@ -29,7 +29,7 @@ object Main extends JFXApp3 {
   var gameStarted: Boolean = false
   var gameOn: Boolean = false
   var gameObjectCreated = false
-  var fullScreenOn = true
+  var fullScreenOn = false
   var game: Game = _
   var graphics: GraphicsContext = null
   val second = 1_000_000_000L
@@ -38,6 +38,7 @@ object Main extends JFXApp3 {
   var animationNum = 0
   var mapSizeX = 20
   var mapSizeY = 15
+  var roundLength = 300
   val timer: AnimationTimer = AnimationTimer(now => {
       if lastTick == 0L || (now - lastTick > second / 64) then {
         lastTick = now
@@ -64,6 +65,9 @@ object Main extends JFXApp3 {
 
   // Flag for player facing direction
   var facingRight: Boolean = true
+
+  // Menu banner
+  val menuPic = new Image(new FileInputStream("assets/menupic.png"))
 
   // Background image
   val backgroundStream: InputStream = new FileInputStream("assets/background.png")
@@ -242,11 +246,11 @@ object Main extends JFXApp3 {
   val overpassvimgL = new Image(overpverstreamL)
 
   def initializeGame(): Unit =
-    game = new Game(mapSizeX, mapSizeY)
+    game = new Game(mapSizeX, mapSizeY, roundLength)
     game.generateLevel(0)
 
   def loadLevel(stage: PrimaryStage): Unit =
-    game = new Game(mapSizeX, mapSizeY)
+    game = new Game(mapSizeX, mapSizeY, roundLength)
     game.levelLoaded = false
     gameOn = false
     var fileName = ""
@@ -661,12 +665,15 @@ object Main extends JFXApp3 {
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
     if (!gameOn) then
-      game = new Game(mapSizeX, mapSizeY)
+      game = new Game(mapSizeX, mapSizeY, roundLength)
     val scores: Seq[String] = game.readFile("scoreboard/scores.txt")
     val scoresFormat: Seq[(Int, String)] = scores.map(formatScore(_))
     val sortedScores = scoresFormat.sortWith(_._1 > _._1)
     var currentY = midPointY - 120
     val scoreScene = new Scene(400, 400) {
+      val banner = new ImageView(menuPic)
+      banner.layoutX = midPointX - (menuPic.width.toInt / 2)
+      banner.layoutY = midPointY - 185 - menuPic.height.toInt
       val label = new Label("Scoreboard")
       label.layoutX = midPointX
       label.layoutY = midPointY - 150
@@ -683,7 +690,7 @@ object Main extends JFXApp3 {
         i.layoutX = midPointX
         i.layoutY = currentY
         currentY += 30
-      content = List(label, exitButton) ::: scoreBuffer.toList
+      content = List(label, exitButton, banner) ::: scoreBuffer.toList
       exitButton.onAction = (e:ActionEvent) => {
         showMenu(stage)
       }
@@ -699,6 +706,9 @@ object Main extends JFXApp3 {
     val levels = dir.listFiles.filter(_.isFile).toList
     var currentY = midPointY - 120
     val customScene = new Scene(400, 400) {
+      val banner = new ImageView(menuPic)
+      banner.layoutX = midPointX - (menuPic.width.toInt / 2)
+      banner.layoutY = midPointY - 185 - menuPic.height.toInt
       val label = new Label("Saved levels:")
       label.layoutX = midPointX
       label.layoutY = midPointY - 150
@@ -715,7 +725,7 @@ object Main extends JFXApp3 {
         currentButton.layoutY = currentY
         currentY += 30
         currentButton.onAction = (e:ActionEvent) => {
-          game = new Game(mapSizeX, mapSizeY)
+          game = new Game(mapSizeX, mapSizeY, roundLength)
           val fileName = "levels/" + i.getName
           levelLoaded = true
           game.loadLevel(fileName)
@@ -724,7 +734,7 @@ object Main extends JFXApp3 {
           stage.fullScreen = fullScreenOn
         }
         buttonBuffer += currentButton
-      content = List(label, close) ::: buttonBuffer.toList
+      content = List(label, close, banner) ::: buttonBuffer.toList
 
     }
     stage.delegate.setScene(customScene)
@@ -734,13 +744,16 @@ object Main extends JFXApp3 {
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
     val howToScene = new Scene(400, 400) {
-      val instructions = new Label("Find exit within the time limit. Move with W, A, S, D keys.")
-      instructions.layoutX = midPointX
+      val banner = new ImageView(menuPic)
+      banner.layoutX = midPointX - (menuPic.width.toInt / 2)
+      banner.layoutY = midPointY - 185 - menuPic.height.toInt
+      val instructions = new Label("Find exit within the time limit. Move with W, A, S, D keys. Give up with Y key.")
+      instructions.layoutX = midPointX - 150
       instructions.layoutY = midPointY - 150
       val close = new Button("Close")
       close.layoutX = midPointX
       close.layoutY = midPointY - 120
-      content = List(instructions, close)
+      content = List(instructions, close, banner)
       close.onAction = (e:ActionEvent) => {
         showMenu(stage)
       }
@@ -752,18 +765,21 @@ object Main extends JFXApp3 {
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
     val optionsScene = new Scene(400, 400) {
+      val banner = new ImageView(menuPic)
+      banner.layoutX = midPointX - (menuPic.width.toInt / 2)
+      banner.layoutY = midPointY - 185 - menuPic.height.toInt
       val currentMap = new Label(s"Current map size: x: ${mapSizeX} y: ${mapSizeY}. Note: map sizes over 100 will cause lag.")
-      currentMap.layoutX = midPointX - 220
+      currentMap.layoutX = midPointX - 250
       currentMap.layoutY = midPointY - 150
       val xLabel = new Label("Change map's width (enter integer):")
-      xLabel.layoutX = midPointX - 220
+      xLabel.layoutX = midPointX - 250
       xLabel.layoutY = midPointY - 120
       val yLabel = new Label("Change map's height (enter integer):")
-      yLabel.layoutX = midPointX - 220
+      yLabel.layoutX = midPointX - 250
       yLabel.layoutY = midPointY - 90
       val close = new Button("Close")
       close.layoutX = midPointX + 250
-      close.layoutY = midPointY - 200
+      close.layoutY = midPointY - 150
       val changeX = new TextField
       changeX.layoutX = midPointX
       changeX.layoutY = midPointY - 120
@@ -771,13 +787,22 @@ object Main extends JFXApp3 {
       changeY.layoutX = midPointX
       changeY.layoutY = midPointY - 90
       val fullScreenLabel = new Label("Fullscreen:")
-      fullScreenLabel.layoutX = midPointX - 220
+      fullScreenLabel.layoutX = midPointX - 250
       fullScreenLabel.layoutY = midPointY - 60
       val fullToggle = new CheckBox()
       fullToggle.layoutX = midPointX
       fullToggle.layoutY = midPointY - 60
       fullToggle.selected = fullScreenOn
-      content = List(currentMap, close, changeX, xLabel, yLabel, changeY, fullScreenLabel, fullToggle)
+      val currentTimer = new Label(s"Current starting round length: ${roundLength}")
+      currentTimer.layoutX = midPointX - 250
+      currentTimer.layoutY = midPointY - 30
+      val timeLabel = new Label("Change starting round length (enter integer):")
+      timeLabel.layoutX = midPointX - 250
+      timeLabel.layoutY = midPointY
+      val changeT = new TextField
+      changeT.layoutX = midPointX
+      changeT.layoutY = midPointY
+      content = List(currentMap, close, changeX, xLabel, yLabel, changeY, fullScreenLabel, fullToggle, banner, currentTimer, timeLabel, changeT)
       close.onAction = (e:ActionEvent) => {
         showMenu(stage)
       }
@@ -793,6 +818,11 @@ object Main extends JFXApp3 {
         if (mapSizeX <= 0) then mapSizeX = 20
         showOptions(stage)
       }
+      changeT.onAction = (e:ActionEvent) => {
+        roundLength = changeT.text.apply().toIntOption.getOrElse(180)
+        if (roundLength <= 0) then roundLength = 180
+        showOptions(stage)
+      }
       fullToggle.onAction = (e:ActionEvent) => {
         fullScreenOn = fullToggle.selected.apply()
         stage.fullScreen = fullScreenOn
@@ -805,6 +835,9 @@ object Main extends JFXApp3 {
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
     val menuScene = new Scene(400, 400) {
+      val banner = new ImageView(menuPic)
+      banner.layoutX = midPointX - (menuPic.width.toInt / 2)
+      banner.layoutY = midPointY - 110 - menuPic.height.toInt
       val startGame = new Button("Start game")
       startGame.layoutX = midPointX
       startGame.layoutY = midPointY - 75
@@ -824,7 +857,7 @@ object Main extends JFXApp3 {
       exit.layoutX = midPointX
       exit.layoutY = midPointY + 75
 
-      content = List(startGame, howTo, scoreboard, options, customLevel, exit)
+      content = List(startGame, howTo, scoreboard, options, customLevel, exit, banner)
 
       startGame.onAction = (e:ActionEvent) => {
         xOffset = 0

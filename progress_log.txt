@@ -46,3 +46,18 @@ Report 3.4.2023
 - I overlooked this in my schedule plan, but I left some room at the end for polishing so I should have time for implementing this functionality.
 - Rest of the time will be used for polishing graphics and gameplay.
 - Estimated working hours for past two weeks are around 10 hours.
+
+Report 17.4.2023
+- Reworked graphics to make game more pretty
+- Impelemented animations to player character
+- Switched to drawing relative to player, thus making "camera" follow player and allowing map sizes that are not limited to screen size
+- Fixed bug that allowed player to go through walls when between squares
+- Implemented options to main menu with functionality
+- Reworked "losing" scenario to correctly show the solution before saving score
+- Biggest difficuties during this work period came from switching to player centered screen
+  - I had to rework the entire drawing mechanics which was quite tedious
+  - However, I left the old system intact so I could use that to show the solution
+- I'm pretty much in schedule as I consider my actual game done at this point.
+- Last days will be used to create documentantion, comment the code better and perhaps create some tests for the project
+- I'm still planning to meet the early deadline (19.4.2023) to get the extra points
+- Estimated working hours for past two weeks are around 25 hours.
