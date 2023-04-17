@@ -4,7 +4,7 @@ import scala.collection.mutable.Buffer
 import scala.math.max
 import java.io.{FileReader, FileNotFoundException, BufferedReader, IOException, FileWriter, BufferedWriter}
 import scala.util.Random
-class Game {
+class Game(sizeX: Int, sizeY: Int) {
   // Game round tracker
   var round = 0
   var level: Level = _
@@ -12,8 +12,8 @@ class Game {
   var player: Player = _
   var points: Int = 0
 
-  var mapSizeX: Int = 20
-  var mapSizeY: Int = 15
+  var mapSizeX: Int = sizeX
+  var mapSizeY: Int = sizeY
   var squareSize: Int = 50
   var roundLength: Int = 180
 

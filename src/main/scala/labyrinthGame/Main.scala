@@ -7,10 +7,9 @@ import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.beans.property.{BooleanProperty, IntegerProperty, ObjectProperty}
 import scalafx.scene.Scene
 import scalafx.scene.canvas.{Canvas, GraphicsContext}
-import scalafx.scene.control.{Label, Menu, MenuBar, MenuItem, TextField}
-import scalafx.scene.control.Button
+import scalafx.scene.control.{Button, CheckBox, Label, Menu, MenuBar, MenuItem, TextField}
 import scalafx.scene.layout.{BorderPane, HBox}
-import scalafx.scene.paint.Color.{Blue, Green, Red, White, Yellow, rgb}
+import scalafx.scene.paint.Color.{Black, Blue, Green, Red, White, Yellow, rgb}
 import scalafx.scene.shape.Rectangle
 import scalafx.scene.input.{KeyCode, KeyEvent}
 import scalafx.scene.image.{Image, ImageView}
@@ -30,12 +29,15 @@ object Main extends JFXApp3 {
   var gameStarted: Boolean = false
   var gameOn: Boolean = false
   var gameObjectCreated = false
+  var fullScreenOn = true
   var game: Game = _
   var graphics: GraphicsContext = null
   val second = 1_000_000_000L
   var lastTick = 0L
   var roundTimer = 0L
   var animationNum = 0
+  var mapSizeX = 20
+  var mapSizeY = 15
   val timer: AnimationTimer = AnimationTimer(now => {
       if lastTick == 0L || (now - lastTick > second / 64) then {
         lastTick = now
@@ -62,6 +64,10 @@ object Main extends JFXApp3 {
 
   // Flag for player facing direction
   var facingRight: Boolean = true
+
+  // Background image
+  val backgroundStream: InputStream = new FileInputStream("assets/background.png")
+  val background = new Image(backgroundStream)
 
   // Player idle images. 15 different animation pics
   val plrstream: InputStream = new FileInputStream("assets/foxy/animation/idle/foxy-idle_00.png")
@@ -236,11 +242,11 @@ object Main extends JFXApp3 {
   val overpassvimgL = new Image(overpverstreamL)
 
   def initializeGame(): Unit =
-    game = new Game
+    game = new Game(mapSizeX, mapSizeY)
     game.generateLevel(0)
 
   def loadLevel(stage: PrimaryStage): Unit =
-    game = new Game
+    game = new Game(mapSizeX, mapSizeY)
     game.levelLoaded = false
     gameOn = false
     var fileName = ""
@@ -313,14 +319,16 @@ object Main extends JFXApp3 {
 
 
   def addScore(stage: PrimaryStage): Unit =
+    stage.fullScreen = fullScreenOn
     val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     val scoreScene = new Scene(400, 400) {
-      val label = new Label("Type in your name to save score:")
+      val label = new Label("Type in your name and press ENTER to save score:")
       label.layoutX = midPointX
-      label.layoutY = 20
+      label.layoutY = midPointY - 30
       val textField = new TextField
-      textField.layoutX = 20
-      textField.layoutY = 50
+      textField.layoutX = midPointX
+      textField.layoutY = midPointY
       content = List(label, textField)
 
       textField.onAction = (e:ActionEvent) => {
@@ -338,8 +346,7 @@ object Main extends JFXApp3 {
   def tick(graphics: GraphicsContext, stage: PrimaryStage): Unit =
       if (game.levelLoaded) then
         game.update()
-        graphics.fill = rgb(0, 0, 0, 1.0)
-        graphics.fillRect(0, 0, stage.width.toInt, stage.height.toInt)
+        graphics.drawImage(background, 0, 0)
 
         if (playerCentered) then
           val playersizeX: Int = plrimg.width.toInt
@@ -405,7 +412,7 @@ object Main extends JFXApp3 {
                 val relativeY: Int = playerY + relativeYdiff
                 val minX = 0 - (overpasshimgL.width.toInt + 10)
                 val minY = 0 - (overpasshimgL.height.toInt + 10)
-                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                if ((relativeX > minX && relativeX < stage.width.toInt + 300) && (relativeY > minY && relativeY < stage.height.toInt + 300)) then
                   graphics.drawImage(overpasshimgL, relativeX - wallvimgL.getWidth.toInt, relativeY + 50)
               if (j.hasVecticalOverpass) then
                 val diffToPlrX: Int = j.getPosX() - game.player.getPosX
@@ -416,7 +423,7 @@ object Main extends JFXApp3 {
                 val relativeY: Int = playerY + relativeYdiff
                 val minX = 0 - (overpassvimgL.width.toInt + 10)
                 val minY = 0 - (overpassvimgL.height.toInt + 10)
-                if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
+                if ((relativeX > minX && relativeX < stage.width.toInt + 300) && (relativeY > minY && relativeY < stage.height.toInt + 300)) then
                   graphics.drawImage(overpassvimgL, relativeX + 50, relativeY - floorLimg.getWidth.toInt / 4)
 
           // Draw player
@@ -547,6 +554,7 @@ object Main extends JFXApp3 {
               else if (animationNum < 30) then
                 graphics.drawImage(plrimg14F, playerXtrue, playerY)
 
+          // Draw overpass again if player is under it
           if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
             val j = game.player.currentSquare
             val diffToPlrX: Int = j.getPosX() - game.player.getPosX
@@ -571,6 +579,14 @@ object Main extends JFXApp3 {
                 val minY = 0 - (overpasshimgL.height.toInt + 10)
                 if ((relativeX > minX && relativeX < stage.width.toInt) && (relativeY > minY && relativeY < stage.height.toInt)) then
                   graphics.drawImage(overpasshimgL, relativeX - wallvimgL.getWidth.toInt, relativeY + 50)
+          // HUD
+          graphics.fill = White
+          graphics.fillRect((stage.width.toInt / 2) - 120, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64), 150, 40)
+          graphics.fillRect((stage.width.toInt / 2) + 120, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64), 170, 40)
+          graphics.fill = Black
+          graphics.font = Font("", 20)
+          graphics.fillText("Timer: " + game.level.timer, (stage.width.toInt / 2) - 100, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64) + 30)
+          graphics.fillText("Points: " + game.points, (stage.width.toInt / 2) + 130, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64) + 30)
 
         else
           // Debug draw with whole map
@@ -604,12 +620,10 @@ object Main extends JFXApp3 {
           if (game.level.showSolution) then
             for (i <- game.level.solution) do
               graphics.fill = Yellow
-              graphics.fillRect((i.getPosX() + i.getSize() / 4) + xOffset, (i.getPosY() + i.getSize() / 4) + yOffset, i.getSize() / 2, i.getSize() / 2)
+              graphics.fillOval((i.getPosX() +  3 * i.getSize() / 8) + xOffset, (i.getPosY() + 3 * i.getSize() / 8) + yOffset, i.getSize() / 4, i.getSize() / 4)
 
           // Player draw
-          graphics.fill = Blue
           graphics.drawImage(dplrimg, game.player.getPosX + xOffset, game.player.getPosY + yOffset)
-          //graphics.fillRect(game.player.getPosX, game.player.getPosY, game.player.size, game.player.size)
 
           if (game.player.currentSquare.hasVecticalOverpass && !game.player.onVerticalOverpass) then
             val j = game.player.currentSquare
@@ -618,10 +632,15 @@ object Main extends JFXApp3 {
             val j = game.player.currentSquare
             graphics.drawImage(overpasshimg, j.getPosX() - j.getSize() / 4, j.getPosY())
 
-        graphics.fill = Blue
-        graphics.font = Font("", 20)
-        graphics.fillText("Timer: " + game.level.timer, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 2)
-        graphics.fillText("Points: " + game.points, game.mapSizeX * (game.squareSize * 1.5) - game.squareSize * 3, game.squareSize * 5)
+          // HUD
+          graphics.fill = rgb(255, 255, 255, 0.7)
+          graphics.fillRect((stage.width.toInt / 2) - 200, (stage.height.toInt / 2) + (stage.height.toInt / 4), 500, 40)
+          graphics.fill = Black
+          graphics.font = Font("", 20)
+          graphics.fillText("Move map with WASD-keys. Continue with SPACE", (stage.width.toInt / 2) - 180, (stage.height.toInt / 2) + (stage.height.toInt / 4) + 30)
+
+
+
 
         // Level win and lose handling
         if (game.level.levelWon) then
@@ -640,19 +659,20 @@ object Main extends JFXApp3 {
 
   def showScores(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     if (!gameOn) then
-      game = new Game
+      game = new Game(mapSizeX, mapSizeY)
     val scores: Seq[String] = game.readFile("scoreboard/scores.txt")
     val scoresFormat: Seq[(Int, String)] = scores.map(formatScore(_))
     val sortedScores = scoresFormat.sortWith(_._1 > _._1)
-    var currentY = 50
+    var currentY = midPointY - 120
     val scoreScene = new Scene(400, 400) {
       val label = new Label("Scoreboard")
       label.layoutX = midPointX
-      label.layoutY = 20
+      label.layoutY = midPointY - 150
       val exitButton = new Button("Exit")
       exitButton.layoutX = midPointX + 100
-      exitButton.layoutY = 20
+      exitButton.layoutY = midPointY - 150
       val scoreBuffer: Buffer[Label] = Buffer[Label]()
       var placement = 1
       for i <- sortedScores do
@@ -669,17 +689,25 @@ object Main extends JFXApp3 {
       }
     }
     stage.delegate.setScene(scoreScene)
+    stage.fullScreen = fullScreenOn
 
   def showCustoms(stage: JFXApp3.PrimaryStage): Unit =
     playerCentered = true
     val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     val dir = new File("levels")
     val levels = dir.listFiles.filter(_.isFile).toList
-    var currentY = 50
+    var currentY = midPointY - 120
     val customScene = new Scene(400, 400) {
       val label = new Label("Saved levels:")
       label.layoutX = midPointX
-      label.layoutY = 20
+      label.layoutY = midPointY - 150
+      val close = new Button("Close")
+      close.layoutX = midPointX + 100
+      close.layoutY = midPointY - 150
+      close.onAction = (e:ActionEvent) => {
+        showMenu(stage)
+      }
       val buttonBuffer: Buffer[Button] = Buffer[Button]()
       for i <- levels do
         val currentButton = new Button(i.getName.dropRight(4))
@@ -687,56 +715,114 @@ object Main extends JFXApp3 {
         currentButton.layoutY = currentY
         currentY += 30
         currentButton.onAction = (e:ActionEvent) => {
-          game = new Game
+          game = new Game(mapSizeX, mapSizeY)
           val fileName = "levels/" + i.getName
           levelLoaded = true
           game.loadLevel(fileName)
           gameOn = true
           start()
+          stage.fullScreen = fullScreenOn
         }
         buttonBuffer += currentButton
-      content = List(label) ::: buttonBuffer.toList
+      content = List(label, close) ::: buttonBuffer.toList
 
     }
     stage.delegate.setScene(customScene)
+    stage.fullScreen = fullScreenOn
 
   def showHowTo(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     val howToScene = new Scene(400, 400) {
       val instructions = new Label("Find exit within the time limit. Move with W, A, S, D keys.")
       instructions.layoutX = midPointX
-      instructions.layoutY = 20
+      instructions.layoutY = midPointY - 150
       val close = new Button("Close")
       close.layoutX = midPointX
-      close.layoutY = 50
+      close.layoutY = midPointY - 120
       content = List(instructions, close)
       close.onAction = (e:ActionEvent) => {
         showMenu(stage)
       }
     }
     stage.delegate.setScene(howToScene)
+    stage.fullScreen = fullScreenOn
+
+  def showOptions(stage: PrimaryStage): Unit =
+    val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
+    val optionsScene = new Scene(400, 400) {
+      val currentMap = new Label(s"Current map size: x: ${mapSizeX} y: ${mapSizeY}. Note: map sizes over 100 will cause lag.")
+      currentMap.layoutX = midPointX - 220
+      currentMap.layoutY = midPointY - 150
+      val xLabel = new Label("Change map's width (enter integer):")
+      xLabel.layoutX = midPointX - 220
+      xLabel.layoutY = midPointY - 120
+      val yLabel = new Label("Change map's height (enter integer):")
+      yLabel.layoutX = midPointX - 220
+      yLabel.layoutY = midPointY - 90
+      val close = new Button("Close")
+      close.layoutX = midPointX + 250
+      close.layoutY = midPointY - 200
+      val changeX = new TextField
+      changeX.layoutX = midPointX
+      changeX.layoutY = midPointY - 120
+      val changeY = new TextField
+      changeY.layoutX = midPointX
+      changeY.layoutY = midPointY - 90
+      val fullScreenLabel = new Label("Fullscreen:")
+      fullScreenLabel.layoutX = midPointX - 220
+      fullScreenLabel.layoutY = midPointY - 60
+      val fullToggle = new CheckBox()
+      fullToggle.layoutX = midPointX
+      fullToggle.layoutY = midPointY - 60
+      fullToggle.selected = fullScreenOn
+      content = List(currentMap, close, changeX, xLabel, yLabel, changeY, fullScreenLabel, fullToggle)
+      close.onAction = (e:ActionEvent) => {
+        showMenu(stage)
+      }
+      changeX.onAction = (e:ActionEvent) => {
+        mapSizeX = changeX.text.apply().toIntOption.getOrElse(20)
+        println(s"Map size changed to ${mapSizeX}")
+        if (mapSizeX <= 0) then mapSizeX = 20
+        showOptions(stage)
+      }
+      changeY.onAction = (e:ActionEvent) => {
+        mapSizeY = changeY.text.apply().toIntOption.getOrElse(20)
+        println(s"Map size changed to ${mapSizeX}")
+        if (mapSizeX <= 0) then mapSizeX = 20
+        showOptions(stage)
+      }
+      fullToggle.onAction = (e:ActionEvent) => {
+        fullScreenOn = fullToggle.selected.apply()
+        stage.fullScreen = fullScreenOn
+      }
+    }
+    stage.delegate.setScene(optionsScene)
+    stage.fullScreen = fullScreenOn
 
   def showMenu(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     val menuScene = new Scene(400, 400) {
       val startGame = new Button("Start game")
       startGame.layoutX = midPointX
-      startGame.layoutY = 20
+      startGame.layoutY = midPointY - 75
       val howTo = new Button("How to?")
       howTo.layoutX = midPointX
-      howTo.layoutY = 50
+      howTo.layoutY = midPointY - 45
       val scoreboard = new Button("Scoreboard")
       scoreboard.layoutX = midPointX
-      scoreboard.layoutY = 80
+      scoreboard.layoutY = midPointY - 15
       val options = new Button("Options")
       options.layoutX = midPointX
-      options.layoutY = 110
+      options.layoutY = midPointY + 15
       val customLevel = new Button("Custom levels")
       customLevel.layoutX = midPointX
-      customLevel.layoutY = 140
+      customLevel.layoutY = midPointY + 45
       val exit = new Button("Exit game")
       exit.layoutX = midPointX
-      exit.layoutY = 170
+      exit.layoutY = midPointY + 75
 
       content = List(startGame, howTo, scoreboard, options, customLevel, exit)
 
@@ -748,7 +834,7 @@ object Main extends JFXApp3 {
         gameStarted = true
         initializeGame()
         start()
-        stage.fullScreen = true
+        stage.fullScreen = fullScreenOn
       }
       exit.onAction = (e:ActionEvent) => {
         sys.exit(0)
@@ -759,11 +845,15 @@ object Main extends JFXApp3 {
       scoreboard.onAction = (e:ActionEvent) => {
         showScores(stage)
       }
-      customLevel.onAction= (e:ActionEvent) => {
+      customLevel.onAction = (e:ActionEvent) => {
         showCustoms(stage)
+      }
+      options.onAction = (e: ActionEvent) => {
+        showOptions(stage)
       }
     }
     stage.delegate.setScene(menuScene)
+    stage.fullScreen = fullScreenOn
 
 
   override def start(): Unit =
@@ -773,6 +863,7 @@ object Main extends JFXApp3 {
       title = "Labyrinth Game"
       width = gd.getDisplayMode.getWidth()
       height = gd.getDisplayMode.getHeight()
+      fullScreen = fullScreenOn
       scene = new Scene {
         val rootPane = new BorderPane
         rootPane.top = new MenuBar {
@@ -787,11 +878,14 @@ object Main extends JFXApp3 {
                     yOffset = 0
                     initializeGame()
                     timer.start()
-                    stage.fullScreen = true
+                    stage.fullScreen = fullScreenOn
                   }
                 },
                 new MenuItem("Solve") {
                   onAction = { _ =>
+                    playerCentered = false
+                    game.level.levelLost = true
+                    gameOn = false
                     game.solveLevel()
                   }
                 },
