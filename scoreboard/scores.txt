@@ -1,11 +1,1 @@
-1000 Make
-2000 Ukko
-1500 Jaa
-1230 Jukka
-0 ekatesti
-0 l
-0 ads
-0 testi
-0 asd
-0  
-985 Tester1
+99999 BillyMitchell
