@@ -7,17 +7,25 @@ import scala.util.Random
 class Game(sizeX: Int, sizeY: Int, time: Int) {
   // Game round tracker
   var round = 0
+  // Current level
   var level: Level = _
+  // Flag to check if level is loaded
   var levelLoaded = false
+  // Current player instance
   var player: Player = _
+  // Current point amount
   var points: Int = 0
-
+  // Maps width
   var mapSizeX: Int = sizeX
+  // Maps height
   var mapSizeY: Int = sizeY
+  // Pixel size for square
   var squareSize: Int = 50
+  // Round length for current round
   var roundLength: Int = time
 
-
+  // Generates unique labyrinth
+  // Calls methods of level accordingly
   def generateLevel(round: Int): Buffer[Buffer[Square]] =
     this.round = round
     this.level = new Level(mapSizeX, mapSizeY, squareSize, roundLength)
@@ -29,7 +37,7 @@ class Game(sizeX: Int, sizeY: Int, time: Int) {
     println(level.seed)
     level.grid
 
-
+  // Helper method to read a file
   def readFile(fileName: String): Seq[String] =
     try
       val fileIn = FileReader(fileName)
@@ -54,6 +62,7 @@ class Game(sizeX: Int, sizeY: Int, time: Int) {
         println("Reading finished with an error")
         Seq[String]()
 
+  // Loads a level based on file name
   def loadLevel(fileName: String): Buffer[Buffer[Square]] =
     this.round = 0
     val levelInfo = readFile(fileName)
@@ -68,7 +77,8 @@ class Game(sizeX: Int, sizeY: Int, time: Int) {
     initializeLevel()
     levelLoaded = true
     level.grid
-
+  
+  // Saves level with specified name
   def saveLevel(fileName: String) =
     val arr: Seq[String] = Seq(level.sizeX.toString, level.sizeY.toString, level.squareLength.toString, level.roundLength.toString, level.seed.toString)
     try
@@ -94,21 +104,25 @@ class Game(sizeX: Int, sizeY: Int, time: Int) {
       case e: IOException =>
         println("Error writing a file: " + e)
 
+  // Places player on starting square
   def placePlayer(level: Level): Unit =
     player = new Player(level)
 
+  // Sets up level correctly
   def initializeLevel(): Unit =
     level.pickEdges()
     level.pickGoals(max(5 - round, 1))
     placePlayer(level)
-
+  
+  // Game loop method
   def update(): Unit =
     updateWinLoseCondition()
-    
+   
+  // Decreases in-game timer
   def decreaseTimer(): Unit =
     level.timer -= 1
 
-
+  // Checks if level has been won or lost
   def updateWinLoseCondition(): Unit =
     for i <- level.goals do
       if i.isHorizontal then
@@ -129,7 +143,7 @@ class Game(sizeX: Int, sizeY: Int, time: Int) {
       round = 0
       level.levelLost = true
       
-      
+  // Generate a solution for level
   def solveLevel(): Unit =
     player.currentSquare = level.startingPoint
     player.resetPos()

@@ -8,30 +8,40 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
   val sizeY = mapSizeY
   val squareLength = squareSize
   val roundLength = startTime
+  // Grid representing each square. Y coordinate first
   val grid: Buffer[Buffer[Square]] = Buffer[Buffer[Square]]()
+  // Grid representing horizontal walls
   val wallGridHorizontal: Buffer[Buffer[Wall]] = Buffer[Buffer[Wall]]()
+  // Grid representing vertical walls
   val wallGridVertical: Buffer[Buffer[Wall]] = Buffer[Buffer[Wall]]()
+  // Level timer
   var timer = startTime
+  // Starting square for player character
   var startingPoint: Square = _
+  // Buffers for level generation
   var connected: Buffer[Square] = Buffer[Square]()
   var unconnected: Buffer[Square] = Buffer[Square]()
   var weavable: Buffer[Square] = Buffer[Square]()
+  // Seed to generate level
   var seed = System.currentTimeMillis()
   var rand = new Random(seed)
+  // Edges of level to set up goals
   val edges: Buffer[Wall] = Buffer[Wall]()
-      val goals = Buffer[Wall]()
+  val goals = Buffer[Wall]()
+  // Game states
   var levelWon = false
   var levelLost = false
   var showSolution = false
+  // Generated solution
   var solution: Buffer[Square] = Buffer[Square]()
 
+  // First set up a grid of squares according to map size
   def initalizeGrid(): Unit =
     for(y <- 0 until mapSizeY) do
       grid.insert(y, Buffer[Square]())
       wallGridHorizontal.insert(y, Buffer[Wall]())
       wallGridVertical.insert(y, Buffer[Wall]())
       for(x <- 0 until mapSizeX) do
-        //println(s"Generating square at pos x:$x y: $y")
         grid(y).insert(x, new Square(x, y, (x * squareSize) + ((x + 1) * (squareSize / 4)), (y * squareSize) + ((y + 1) * (squareSize / 4)), squareSize))
         wallGridHorizontal(y).insert(x, new Wall(x * (squareSize + (squareSize / 4)), y * (squareSize + (squareSize / 4)), squareSize + (squareSize / 2), squareSize / 4, true))
         if (y == 0) then
@@ -51,7 +61,7 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
       wallGridVertical(y).insert(x, new Wall(x * (squareSize + (squareSize / 4)), y * (squareSize + (squareSize / 4)), squareSize + (squareSize / 2), squareSize / 4, false))
       wallGridVertical(y)(x).isEdge = true
 
-
+  // Checks whether neighbouring squares should be enumerated with level generation algorithm
   def addNeighboursToUnconnected(square: Square): Unit =
     if(square.getGridPosX() != 0) then
       val leftNeighbour = grid(square.getGridPosY())(square.getGridPosX() - 1)
@@ -85,7 +95,7 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
         if (downNeighbour.getGridPosX() != 0 && downNeighbour.getGridPosX() != mapSizeX - 1 && downNeighbour.getGridPosY() != 0 && downNeighbour.getGridPosY() != mapSizeY - 1) then
           downNeighbour.weavable = true
 
-
+  // Pick starting position at random for player
   def pickStartingPosition(): Unit =
     val x = rand.nextInt(mapSizeX)
     val y = rand.nextInt(mapSizeY)
@@ -95,14 +105,12 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
     startingPoint.connected = true
     addNeighboursToUnconnected(startingPoint)
 
-
+  // Generates labyrinth using buffers
   def generateLabyrinth(): Unit =
     var currentSquare = connected.head
     while (unconnected.nonEmpty && connected.nonEmpty) do
       if currentSquare.unconnectedNeighbours.nonEmpty then
         val targetSquare = currentSquare.unconnectedNeighbours(rand.nextInt(currentSquare.unconnectedNeighbours.length))
-        
-        //println(s"Current square: x${currentSquare.getGridPosX()} y${currentSquare.getGridPosY()},  Target: x${targetSquare.getGridPosX()} y${targetSquare.getGridPosY()}")
   
         // Neighbour orientation (from current)
         // 0 = up
@@ -187,6 +195,7 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
         if connected.nonEmpty then
           currentSquare = connected.head
 
+  // Picks maps edges to Buffer.
   def pickEdges(): Unit =
     for (y <- wallGridVertical) do
       for (x <- y) do
@@ -197,6 +206,7 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
         if (x.isEdge)
           edges += x
 
+  // Picks goals at random from maps edges.
   def pickGoals(amount: Int): Unit =
     for i <- 0 until amount do
       goals += edges(rand.nextInt(edges.length))
@@ -204,9 +214,10 @@ class Level(mapSizeX: Int, mapSizeY: Int, squareSize: Int, startTime: Int) {
       i.isGoal = true
       i.isBroken = true
 
-
+  // Getter for square size
   def getSquareSize: Int = squareSize
 
+  // Generates the shortest possible solution to the level.
   def solve(): Buffer[Square] =
     var movements: Buffer[Square] = Buffer[Square](startingPoint)
     var intersections: Buffer[Tuple2[Buffer[Square], Buffer[Square]]] = Buffer[Tuple2[Buffer[Square], Buffer[Square]]]()

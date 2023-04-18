@@ -24,21 +24,36 @@ import java.io.{BufferedWriter, File, FileInputStream, FileNotFoundException, Fi
 import scala.collection.mutable.Buffer
 
 object Main extends JFXApp3 {
-
+  
+  // Flag to check if level has been loaded
   var levelLoaded: Boolean = false
+  // Flag to check whether game has been launched from many
   var gameStarted: Boolean = false
+  // Flag used to check whether game is on or not
   var gameOn: Boolean = false
+  // Flag to check initally whether game class is still null
   var gameObjectCreated = false
+  // Flag to set game on fullscreen
   var fullScreenOn = false
+  // Game object that runs labyrinth game
   var game: Game = _
+  // GraphicsContext variable that the game is drawn on
   var graphics: GraphicsContext = null
+  // Long for second. Used in timer
   val second = 1_000_000_000L
+  // Tracks current tick
   var lastTick = 0L
+  // Tracks round time
   var roundTimer = 0L
+  // Number to determine state of animation
   var animationNum = 0
+  // Variable that sets map size for width
   var mapSizeX = 20
+  // Variable that sets map size for height
   var mapSizeY = 15
+  // Round length for a first round of new game
   var roundLength = 300
+  // Timer that updates tick and animation number and also round timer
   val timer: AnimationTimer = AnimationTimer(now => {
       if lastTick == 0L || (now - lastTick > second / 64) then {
         lastTick = now
@@ -244,24 +259,28 @@ object Main extends JFXApp3 {
   // Vertical overpass large image
   val overpverstreamL: InputStream = new FileInputStream("assets/verticalbridgeL.png")
   val overpassvimgL = new Image(overpverstreamL)
-
+  
+  // Method to setup game class correctly
   def initializeGame(): Unit =
     game = new Game(mapSizeX, mapSizeY, roundLength)
     game.generateLevel(0)
-
+  
+  // Method for loading a level from in game menu. Asks for input at loads corresponding level
   def loadLevel(stage: PrimaryStage): Unit =
+    val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     game = new Game(mapSizeX, mapSizeY, roundLength)
     game.levelLoaded = false
     gameOn = false
     var fileName = ""
     val inputScene = new Scene(400, 400) {
       val label = new Label("Type the name of the level file to load")
-      label.layoutX = 20
-      label.layoutY = 20
+      label.layoutX = midPointX - 50
+      label.layoutY = midPointY - 15
 
       val textField = new TextField
-      textField.layoutX = 20
-      textField.layoutY = 50
+      textField.layoutX = midPointX - 50
+      textField.layoutY = midPointY + 15
       content = List(label, textField)
 
       textField.onAction = (e:ActionEvent) => {
@@ -273,17 +292,20 @@ object Main extends JFXApp3 {
       }
     }
     stage.delegate.setScene(inputScene)
-
+  
+  // Method for changing scene to level save and asking input. Delegates actual saving to game class
   def saveLevel(stage: PrimaryStage): Unit =
+    val midPointX = stage.width.toInt / 2
+    val midPointY = stage.height.toInt / 2
     var fileName = ""
     val inputScene = new Scene(400, 400) {
       val label = new Label("Type a name for the level")
-      label.layoutX = 20
-      label.layoutY = 20
+      label.layoutX = midPointX - 50
+      label.layoutY = midPointY - 15
 
       val textField = new TextField
-      textField.layoutX = 20
-      textField.layoutY = 50
+      textField.layoutX = midPointX - 50
+      textField.layoutY = midPointY + 15
       content = List(label, textField)
 
       textField.onAction = (e:ActionEvent) => {
@@ -293,7 +315,8 @@ object Main extends JFXApp3 {
       }
     }
     stage.delegate.setScene(inputScene)
-
+  
+  // Adds score to scoreboard file
   def addScoreToFile(player: String): Unit =
     val oldScores: Seq[String] = game.readFile("scoreboard/scores.txt")
     val plrScore = game.points.toString + " " + player
@@ -321,7 +344,7 @@ object Main extends JFXApp3 {
       case e: IOException =>
         println("Error writing a file: " + e)
 
-
+  // Method for drawing scene for saving score
   def addScore(stage: PrimaryStage): Unit =
     stage.fullScreen = fullScreenOn
     val midPointX = stage.width.toInt / 2
@@ -345,13 +368,14 @@ object Main extends JFXApp3 {
     }
     stage.delegate.setScene(scoreScene)
 
-
-
+  // Method that updates each tick
+  // Also handles drawing.
   def tick(graphics: GraphicsContext, stage: PrimaryStage): Unit =
+      // Check if game is loaded
       if (game.levelLoaded) then
         game.update()
         graphics.drawImage(background, 0, 0)
-
+        // If game mode on draw map centered around player.
         if (playerCentered) then
           val playersizeX: Int = plrimg.width.toInt
           val playersize: Int = plrimg.height.toInt
@@ -591,9 +615,9 @@ object Main extends JFXApp3 {
           graphics.font = Font("", 20)
           graphics.fillText("Timer: " + game.level.timer, (stage.width.toInt / 2) - 100, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64) + 30)
           graphics.fillText("Points: " + game.points, (stage.width.toInt / 2) + 130, (stage.height.toInt / 2) - (31 * stage.height.toInt / 64) + 30)
-
+      
         else
-          // Debug draw with whole map
+          // Solution "zoomed out" draw with whole map
           // Tile draw
           for (i <- game.level.grid) do
             for (j <- i) do
@@ -643,9 +667,6 @@ object Main extends JFXApp3 {
           graphics.font = Font("", 20)
           graphics.fillText("Move map with WASD-keys. Continue with SPACE", (stage.width.toInt / 2) - 180, (stage.height.toInt / 2) + (stage.height.toInt / 4) + 30)
 
-
-
-
         // Level win and lose handling
         if (game.level.levelWon) then
           game.generateLevel(game.round)
@@ -653,14 +674,16 @@ object Main extends JFXApp3 {
           playerCentered = false
           game.solveLevel()
           gameOn = false
-
+  
+  // Method for formatting score correctly to file
   def formatScore(score: String): (Int, String) =
     val splittedString = score.split(" ")
     if splittedString.length == 2 then
       (splittedString.head.toInt, splittedString(1))
     else
       (splittedString.head.toInt, "-")
-
+  
+  // Method for setting scene to show scores from scoreboard
   def showScores(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
@@ -697,7 +720,8 @@ object Main extends JFXApp3 {
     }
     stage.delegate.setScene(scoreScene)
     stage.fullScreen = fullScreenOn
-
+  
+  // Method for setting scene to show custom maps.
   def showCustoms(stage: JFXApp3.PrimaryStage): Unit =
     playerCentered = true
     val midPointX = stage.width.toInt / 2
@@ -739,7 +763,8 @@ object Main extends JFXApp3 {
     }
     stage.delegate.setScene(customScene)
     stage.fullScreen = fullScreenOn
-
+  
+  // Method for showing tutorial
   def showHowTo(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
@@ -761,6 +786,7 @@ object Main extends JFXApp3 {
     stage.delegate.setScene(howToScene)
     stage.fullScreen = fullScreenOn
 
+  // Method for showing options
   def showOptions(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
@@ -830,7 +856,8 @@ object Main extends JFXApp3 {
     }
     stage.delegate.setScene(optionsScene)
     stage.fullScreen = fullScreenOn
-
+  
+  // Method for showing main menu
   def showMenu(stage: PrimaryStage): Unit =
     val midPointX = stage.width.toInt / 2
     val midPointY = stage.height.toInt / 2
@@ -888,7 +915,8 @@ object Main extends JFXApp3 {
     stage.delegate.setScene(menuScene)
     stage.fullScreen = fullScreenOn
 
-
+  // Starts the app and loads inputs and menu
+  // Checks if game is loaded and loads menu
   override def start(): Unit =
 
     val gd = GraphicsEnvironment.getLocalGraphicsEnvironment.getDefaultScreenDevice
